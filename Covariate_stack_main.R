@@ -2,19 +2,27 @@
 ### Main script for overview and planning.
 
 # To do:
+
+# First steps:
 #  1: Fix NA values in fuzzy landscape elements and geology. [!]
-#  2: Add new wetland extent as a covariate (fuzzy?).
-#  3: ADK wetlands as covariate (fuzzy), based on raw version without landscape
+#  2: Add layers from SoilSuite. [!]
+#  3: Add ALOS/PALSAR. [!]
+#  4: ADK wetlands as covariate (fuzzy), based on raw version without landscape
 #     elements.
-#  4: Add layers from SoilSuite. [!]
-#  5: Add ALOS/PALSAR. [!]
-#  6: Alpha Earth layers? (Ask Julian/Sebastian)
-#  7: Peat types from Giri's work. (fuzzy) (Amélie?)
-#  8: Peat probabilities and point probabilities based on Jupiter and the Ochre
+
+# Second steps:
+#  5: Peat probabilities and point probabilities based on Jupiter and the Ochre
 #     database. [!]
-#  9: Microtopography. [!]
-# 10: Addtional DEM layers with sea surfaces filled in?
-# 11: 100 m DEM derivatives?
+#  6: Microtopography. [!]
+#  7: 100 m DEM derivatives?
+#  8: Addtional DEM layers with sea surfaces filled in?
+
+# Wait:
+#  9: Add new wetland extent as a covariate (fuzzy?). [wait]
+# 10: Alpha Earth layers? (Ask Julian/Sebastian) [wait]
+# 11: Peat types from Giri's work. (fuzzy) (Amélie?) [wait]
+
+# Standard processing:
 # 12: Standardize names.
 # 13: Round off values.
 # 14: Fill gaps (especially bare soil products).
