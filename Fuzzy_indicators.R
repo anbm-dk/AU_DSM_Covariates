@@ -4,15 +4,15 @@
 # crisp_adk_wetlands.tif - 1:20,000   - smallest units about 15 m across [ok]
 # geology_         - 1:25,000   - smallest units about 25 m across [ok]
 # landscape_       - 1:100,000  - smallest units about 100 m across [ok]
-# georeg_          - 1:100,000  - the uncertainty seems to reach 500 m in some cases [  ]
-# lu_              - 10 m - (Corine LU has a scale of 1:00,000, but the basemap has 10 m resolution) [  ]
-# Use a sigma of less than 1 for lu.
-# imk             - 10 m, use half sigma for fuzzification [  ]
-# cwl_10m_  # Already processed in ArcGIS (original resolution 20 m) [  ]
+# georeg_          - 1:100,000  - the uncertainty seems to reach 500 m in some cases [ok]
+# lu_              - 10 m - (Corine LU has a scale of 1:00,000, but the basemap has 10 m resolution) [ok]
+# (Use a sigma of less than 1 for lu.)
+# imk             - 10 m, use half sigma for fuzzification [ok]
+# cwl_10m_  # Already processed in ArcGIS (original resolution 20 m) [removed from stack]
 
 # Also rename crisp indicators to highlight differences.
 
-# lu, imk, and cwl will only need new names for the crisp layers. They will not
+# lu and imk will only need new names for the crisp layers. They will not
 # need to be processed again
 
 # 1: Start up
@@ -322,15 +322,23 @@ rename_crisp <- function(
 #   outfolder = tmpfolder
 # )
 
-
-# Process georegions [  ]
-
+# # Rename georegions [ok]
+# 
 # georeg_ind <- grepl(
 #   "georeg_",
 #   cov_files
 # )
 # 
-# georeg_crisp <- cov_files[georeg_ind] %>% rast()
+# georeg_files <- cov_files[georeg_ind] %>%
+#   str_subset(pattern = "crisp", negate = TRUE) %>%
+#   str_subset(pattern = "fuzzy", negate = TRUE)
+# 
+# georeg_crisp <- rename_crisp(
+#   georeg_files,
+#   outfolder = tmpfolder
+#   )
+# 
+# # Process georegions [ok]
 # 
 # fuzzify_indicators(
 #   georeg_crisp,
@@ -373,7 +381,23 @@ plot(r3 - r1)
 
 r3 - r1
 
-# Process LU [  ]
+# Rename LU [ok]
+
+lu_ind <- grepl(
+  "lu_",
+  cov_files
+)
+
+lu_files <- cov_files[lu_ind] %>%
+  str_subset(pattern = "crisp", negate = TRUE) %>%
+  str_subset(pattern = "fuzzy", negate = TRUE)
+
+lu_crisp <- rename_crisp(
+  lu_files,
+  outfolder = tmpfolder
+  )
+
+# Process LU [ok]
 
 # lu_ind <- grepl(
 #   "lu_",
@@ -389,7 +413,23 @@ r3 - r1
 #   outfolder = tmpfolder
 # )
 
-# Process imk [  ]
+# Rename IMK [ok]
+
+imk_ind <- grepl(
+  "imk_",
+  cov_files
+)
+
+imk_files <- cov_files[imk_ind] %>%
+  str_subset(pattern = "crisp", negate = TRUE) %>%
+  str_subset(pattern = "fuzzy", negate = TRUE)
+
+imk_crisp <- rename_crisp(
+  imk_files,
+  outfolder = tmpfolder
+)
+
+# Process imk [ok]
 
 # imk_files <- grep(
 #   "imk_",
