@@ -4,11 +4,11 @@
 # To do:
 
 # First steps:
-#  1: Fix NA values in fuzzy landscape elements and geology. [!]
+#  1: Fix NA values in fuzzy landscape elements and geology. [ok]
 #  2: Add layers from SoilSuite. [!]
 #  3: Add ALOS/PALSAR. [!]
 #  4: ADK wetlands as covariate (fuzzy), based on raw version without landscape
-#     elements.
+#     elements [ok].
 
 # Second steps:
 #  5: Peat probabilities and point probabilities based on Jupiter and the Ochre
