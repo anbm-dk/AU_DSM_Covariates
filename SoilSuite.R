@@ -6,7 +6,6 @@
 # - Resample to 10 m resolution
 # - Mask to DEM extent
 
-
 # 1: Start up
 
 library(terra)
@@ -52,6 +51,9 @@ dem <- cov_files[dem_ind] %>% rast()
 
 crs(dem) <- mycrs
 
+source("Fill_raster_gaps.R")
+source("Focal_density.R")
+
 # List files
 
 files_soilsuite <- dir_soilsuite %>%
@@ -92,113 +94,75 @@ newnames_full <- names_full %>%
 
 r_full <- files_full %>% rast()
 
-r_full_resampled <- r_full %>%
-  terra::project(
-    x = .,
-    y = dem,
-    method = "cubicspline",
-    mask = TRUE,
-    threads = 10
-  )
-
-names(r_full_resampled) <- newnames_full
-
 newfiles_full <- dir_out %>%
   paste0(., newnames_full, ".tif")
 
-for (i in 1:(nlyr(r_full_resampled) - 1)) {
-    writeRaster(
-      r_full_resampled[[i]],
+for (i in 1:(nlyr(r_full) - 1)) {
+  r_filled_i <- r_full[[i]] %>%
+    terra::clamp(
+      lower = 0,
+      upper = 10000,
+      values = FALSE,
+    ) %>% 
+    fill_gaps_gauss(
+      nsteps = 9
+    )
+  
+  r_resampled_i <- r_filled_i$final %>%
+    terra::project(
+      x = .,
+      y = dem,
+      method = "cubicspline",
+      mask = TRUE,
+      threads = 10
+    ) %>%
+    mask(
+      mask = dem
+    )
+  
+  names(r_resampled_i) <- newnames_full[i]
+  varnameas(r_resampled_i) <- newnames_full[i]
+  
+  r_resampled_i %>%
+    terra::clamp(
+      lower = 0,
+      upper = 10000,
+      values = TRUE,
       filename = newfiles_full[i],
       names = newnames_full[i],
       datatype = "INT2U",
       overwrite = TRUE,
       gdal = "TILED=YES"
     )
+
+  tmpFiles(remove = TRUE)
 }
 
-r_full_resampled[[nlyr(r_full_resampled)]] %>%
-  round(
+r_full_freq_resampled <- r_full[[nlyr(r_full)]] %>%
+  terra::project(
+    x = .,
+    y = dem,
+    method = "cubicspline",
+    mask = TRUE,
+    threads = 10
+  ) %>%
+  mask(
+    mask = dem
+  )
+
+names(r_full_freq_resampled) <- newnames_full[nlyr(r_full)]
+varnames(r_full_freq_resampled) <- newnames_full[nlyr(r_full)]
+
+r_full_freq_resampled %>%
+  terra::math(
+    "round",
     digits = 3,
-    filename = newfiles_full[nlyr(r_full_resampled)],
-    names = newnames_full[nlyr(r_full_resampled)],
+    filename = newfiles_full[nlyr(r_full)],
+    names = newnames_full[nlyr(r_full)],
     datatype = "FLT4S",
     overwrite = TRUE,
     gdal = "TILED=YES"
   )
-
-# Function to fill gaps
-
-fill_gaps_gauss <- function(
-    inrast,
-    nsteps,
-    include_list = FALSE
-) {
-  r1 <- rast(ncols = 180, nrows = 180, xmin = 0)
-  myfilter1 <- round(
-    focalMat(r1, c(1, 2), "Gauss"),
-    3
-  )
-  myfilter2 <- myfilter1
-  
-  smooth_up_list <- list()
-  aggregated_list <- list()
-  aggregated_list[[1]] <- c(
-    inrast*0 + 1,
-    inrast
-  )
-  names(aggregated_list[[1]]) <- c("count", "mean")
-  # Stepwise smoothing and aggregation
-  for (i in 2:nsteps) {
-    smoothed_down <- terra::focal(
-      aggregated_list[[i - 1]],
-      w = myfilter1,
-      fun = "sum",
-      na.policy = "all",
-      na.rm = TRUE
-    )
-    aggregated_list[[i]] <- terra::aggregate(
-      smoothed_down,  
-      fun = "mean",
-      na.rm = TRUE
-    )
-  }
-  # Stepwise disaggregation, merging and smoothing
-  smooth_up_list[[nsteps]] <- aggregated_list[[nsteps]]
-  for (i in (nsteps - 1):1) {
-    # Disaggregate by 2
-    splitted <- terra::project(
-      x = smooth_up_list[[i + 1]],
-      y = aggregated_list[[i]],
-      method = "near"
-    )
-    # Merge with aggregated layers
-    merged <- terra::merge(
-      x = aggregated_list[[i]],
-      y = splitted
-    )
-    # Smoothing
-    smooth_up_list[[i]] <- terra::focal(
-      merged,
-      w = myfilter2,
-      fun = "sum",
-      na.policy = "all",
-      na.rm = TRUE
-    )
-  }
-  # Divide mean values by the number of cells, to get a weighted mean
-  final_lyr <- smooth_up_list[[1]][[2]] / smooth_up_list[[1]][[1]]
-  out <- list()
-  # Merge with input layer
-  out$final <- terra::merge(
-    inrast,
-    final_lyr,
-    wopt = list(datatype = datatype(inrast))
-  )
-  out$aggregated_list <- aggregated_list
-  out$smooth_up_list <- smooth_up_list
-  return(out)
-}
 
 # Process bare soil files
 
@@ -209,23 +173,92 @@ r_bare <- files_bare %>% rast()
 
 for (j in 1:nlyr(r_bare)) {
   r <- r_bare[[i]]
-
-  r2 <- fill_gaps_gauss(
-    r,
-    nsteps = 9
-  )
-
-  r3 <- mask(
-    r2$final,
-    dem,
-    filename = paste0(dir_out, newnames_bare[i], ".tif"),
-    names = newnames_bare[i],
-    datatype = "INT2U",
-    gdal = "TILED=YES"
-  )
+  
+  r2 <- r %>%
+    terra::clamp(
+      lower = 0,
+      upper = 10000,
+      values = FALSE,
+    ) %>% 
+    fill_gaps_gauss(
+      nsteps = 9
+    ) 
+  
+  r3 <- r2$final %>%
+    terra::project(
+      x = .,
+      y = dem,
+      method = "cubicspline",
+      mask = TRUE,
+      threads = 10
+    ) %>%
+    mask(
+      mask = dem
+    )
+  
+  names(r3) <- newnames_bare[i]
+  varnames(r3) <- newnames_bare[i]
+  
+  r3 %>% 
+    terra::clamp(
+      lower = 0,
+      upper = 10000,
+      values = TRUE,
+      filename = paste0(dir_out, newnames_bare[i], ".tif"),
+      names = newnames_bare[i],
+      datatype = "INT2U",
+      gdal = "TILED=YES"
+    )
   
   rm(r, r2)
   tmpFiles(remove = TRUE)
 }
+
+# Focal density filter for bare soil extent
+
+r_bare_mask <- paste0(
+  dir_soilsuite,
+  "/mask.tif"
+) %>%
+  rast() %>%
+  subst(
+    from = c(2:3),
+    to = c(NA, NA)
+  )
+
+newname_bare_mask <- "soilsuite__bare_mask_density"
+newfile_bare_mask <- dir_out %>%
+  paste0(., newname_bare_mask, ".tif")
+
+r_bare_mask_dens <- r_bare_mask %>%
+  focal_density(
+    nsteps = 9
+  )
+
+r_bare_mask_dens_resampled <- r_bare_mask_dens$final %>%
+  terra::project(
+    x = .,
+    y = dem,
+    method = "cubicspline",
+    mask = TRUE,
+    threads = 10
+  ) %>%
+  mask(
+    mask = dem
+  )
+
+names(r_bare_mask_dens_resampled) <- newname_bare_mask
+varnames(r_bare_mask_dens_resampled) <- newname_bare_mask
+
+r_bare_mask_dens_resampled %>%
+  terra::math(
+    "round",
+    digits = 3,
+    filename = newfile_bare_mask,
+    names = newname_bare_mask,
+    datatype = "FLT4S",
+    overwrite = TRUE,
+    gdal = "TILED=YES"
+  )
 
 # END
