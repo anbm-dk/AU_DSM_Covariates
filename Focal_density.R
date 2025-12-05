@@ -87,15 +87,15 @@ focal_density <- function(
   return(out)
 }
 
-f <- system.file("ex/elev.tif", package = "terra")
-r <- rast(f)
-plot(r)
-
-
-r_dens <- focal_density(r, 6)
-# r_dens <- fill_gaps_gauss(r * 0 + 1, 6)
-
-
-plot(r_dens$final)
+# f <- system.file("ex/elev.tif", package = "terra")
+# r <- rast(f)
+# plot(r)
+# 
+# 
+# r_dens <- focal_density(r, 6)
+# # r_dens <- fill_gaps_gauss(r * 0 + 1, 6)
+# 
+# 
+# plot(r_dens$final)
 
 # END
