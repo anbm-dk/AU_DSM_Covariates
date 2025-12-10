@@ -9,6 +9,7 @@
 # (Use a sigma of less than 1 for lu.)
 # imk             - 10 m, use half sigma for fuzzification [ok]
 # cwl_10m_  # Already processed in ArcGIS (original resolution 20 m) [removed from stack]
+# nature types:   - 10 m - (the basemap has 10 m resolution) [  ]
 
 # Also rename crisp indicators to highlight differences.
 
@@ -356,11 +357,11 @@ r1 <- matrix(
 ) %>%
   rast()
 
-plot(r1)
-
-r2 <- focal(r1, w = my_focal_weights, na.rm = TRUE)
-
-plot(r2)
+# plot(r1)
+# 
+# r2 <- focal(r1, w = my_focal_weights, na.rm = TRUE)
+# 
+# plot(r2)
 
 # halfsigma <- focalMat(r1, d = c(0.56, 2), type = 'Gauss')
 
@@ -368,34 +369,34 @@ halfsigma <- focalMat(r1, d = c(0.5, 1), type = 'Gauss')
 
 halfsigma
 
-r3 <- focal(r1, w = halfsigma, na.rm = TRUE)
-
-library(viridis)
-
-plot(r1, col = cividis(100))
-plot(r3, col = cividis(100))
-
-hist(r3, breaks = 100)
-
-plot(r3 - r1)
-
-r3 - r1
+# r3 <- focal(r1, w = halfsigma, na.rm = TRUE)
+# 
+# library(viridis)
+# 
+# plot(r1, col = cividis(100))
+# plot(r3, col = cividis(100))
+# 
+# hist(r3, breaks = 100)
+# 
+# plot(r3 - r1)
+# 
+# r3 - r1
 
 # Rename LU [ok]
 
-lu_ind <- grepl(
-  "lu_",
-  cov_files
-)
-
-lu_files <- cov_files[lu_ind] %>%
-  str_subset(pattern = "crisp", negate = TRUE) %>%
-  str_subset(pattern = "fuzzy", negate = TRUE)
-
-lu_crisp <- rename_crisp(
-  lu_files,
-  outfolder = tmpfolder
-  )
+# lu_ind <- grepl(
+#   "lu_",
+#   cov_files
+# )
+# 
+# lu_files <- cov_files[lu_ind] %>%
+#   str_subset(pattern = "crisp", negate = TRUE) %>%
+#   str_subset(pattern = "fuzzy", negate = TRUE)
+# 
+# lu_crisp <- rename_crisp(
+#   lu_files,
+#   outfolder = tmpfolder
+#   )
 
 # Process LU [ok]
 
@@ -413,21 +414,21 @@ lu_crisp <- rename_crisp(
 #   outfolder = tmpfolder
 # )
 
-# Rename IMK [ok]
-
-imk_ind <- grepl(
-  "imk_",
-  cov_files
-)
-
-imk_files <- cov_files[imk_ind] %>%
-  str_subset(pattern = "crisp", negate = TRUE) %>%
-  str_subset(pattern = "fuzzy", negate = TRUE)
-
-imk_crisp <- rename_crisp(
-  imk_files,
-  outfolder = tmpfolder
-)
+# # Rename IMK [ok]
+# 
+# imk_ind <- grepl(
+#   "imk_",
+#   cov_files
+# )
+# 
+# imk_files <- cov_files[imk_ind] %>%
+#   str_subset(pattern = "crisp", negate = TRUE) %>%
+#   str_subset(pattern = "fuzzy", negate = TRUE)
+# 
+# imk_crisp <- rename_crisp(
+#   imk_files,
+#   outfolder = tmpfolder
+# )
 
 # Process imk [ok]
 
@@ -465,6 +466,140 @@ imk_crisp <- rename_crisp(
 #   )
 # }
 
+# Rename_nature types from basemap and write new rasters [ok]
+# Clip crisp and fuzzy rasters afterwards using dem extent
 
+dir_nature <- dir_dat %>%
+  paste0(., "/BasemapForMapping/")
+
+dir_nature_crisp <- dir_dat %>%
+  paste0(., "/basemap_crisp/") %T>%
+  dir.create()
+
+dir_nature_fuzzy <- dir_dat %>%
+  paste0(., "/basemap_fuzzy/") %T>%
+  dir.create()
+
+dir_nature_masked <- dir_dat %>%
+  paste0(., "/basemap_both_masked/") %T>%
+  dir.create()
+
+nature_names_original <- dir_nature %>%
+  list.files(
+    pattern = "\\.tif$",
+    full.names = TRUE
+  )
+
+nature_newnames_crisp <- nature_names_original %>%
+  str_replace_all(" ", "_") %>%
+  basename() %>%
+  file_path_sans_ext() %>%
+  tolower() %>%
+  paste0("crisp_basemap_", .)
+
+nature_newnames_fuzzy <- nature_names_original %>%
+  str_replace_all(" ", "_") %>%
+  basename() %>%
+  file_path_sans_ext() %>%
+  tolower() %>%
+  paste0("fuzzy_basemap_", .)
+
+nature_newfiles_crisp1 <- nature_newnames_crisp %>%
+  paste0(dir_nature_crisp, ., ".tif")
+
+# Load crisp files, rename, rewrite [ok]
+
+nature_crisp <- nature_names_original %>%
+  rast()
+
+names(nature_crisp) <- nature_newnames_crisp
+varnames(nature_crisp) <- nature_newnames_crisp
+
+# for (i in 1:nlyr(nature_crisp)) {
+#     writeRaster(
+#       nature_crisp[[i]],
+#       filename = nature_newfiles_crisp1[i],
+#       datatype = "INT2U",
+#       overwrite = TRUE,
+#       gdal = "TILED=YES"
+#     )
+# }
+
+# # Process fuzzy nature types [ok]
+
+nature_crisp1 <- dir_nature_crisp %>%
+  list.files(
+    pattern = "\\.tif$",
+    full.names = TRUE
+  ) %>%
+  rast()
+
+# fuzzify_indicators(
+#   nature_crisp1,
+#   local_filter = halfsigma,
+#   n_digits = 2,
+#   outfolder = dir_nature_fuzzy
+# )
+
+# Mask crisp layers [ok]
+
+for(i in 1:nlyr(nature_crisp1)) {
+  outname_i <- nature_newfiles_crisp1[i]  %>%
+    basename() %>%
+    file_path_sans_ext()
+  
+  masked_i <- terra::mask(
+    nature_crisp1[[i]],
+    mask = dem
+  )
+  
+  names(masked_i) <- outname_i
+  varnames(masked_i) <- outname_i
+  
+  writeRaster(
+    masked_i,
+    filename = paste0(
+      dir_nature_masked, outname_i, ".tif"
+    ),
+    datatype = "INT2U",
+    overwrite = TRUE,
+    gdal = "TILED=YES"
+  )
+  
+  tmpFiles(remove = TRUE)
+}
+
+# Mask fuzzy layers
+
+nature_fuzzy <- dir_nature_fuzzy %>%
+  list.files(
+    pattern = "\\.tif$",
+    full.names = TRUE
+  ) %>%
+  rast()
+# %>%
+#   subset(-nlyr(.))
+
+for(i in 1:nlyr(nature_fuzzy)) {
+  outname_i <- nature_newnames_fuzzy[i]
+  
+  masked_i <- terra::mask(
+    nature_fuzzy[[i]],
+    mask = dem
+  )
+  
+  names(masked_i) <- outname_i
+  varnames(masked_i) <- outname_i
+  
+  writeRaster(
+    masked_i,
+    filename = paste0(
+      dir_nature_masked, outname_i, ".tif"
+    ),
+    datatype = "FLT4S",
+    overwrite = TRUE,
+    gdal = "TILED=YES"
+  )
+}
 
 # END

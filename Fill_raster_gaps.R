@@ -6,6 +6,8 @@ fill_gaps_gauss <- function(
     include_list = FALSE,
     weighted
 ) {
+  require(terra)
+  require(magrittr)
   r1 <- rast(ncols = 180, nrows = 180, xmin = 0)
   # myfilter <- round(
   #   focalMat(r1, c(1, 2), "Gauss"),
@@ -36,13 +38,15 @@ fill_gaps_gauss <- function(
       ) %>%
         terra::focal(
         w = myfilter,
-        fun = "mean",
-        na.policy = "omit",
+        fun = "sum",
+        na.policy = "all",
+        # na.policy = "omit",
         na.rm = TRUE
       ) %>%
         terra::aggregate(
           fun = "sum",
-          na.rm = TRUE
+          # na.rm = TRUE
+          na.rm = FALSE
         )
       aggregated_list[[i]] <- c(
         aggregated_i[[1]],
@@ -148,24 +152,25 @@ fill_gaps_gauss <- function(
   return(out)
 }
 
-f <- system.file("ex/elev.tif", package = "terra")
-r <- rast(f)
-plot(r)
-
-r[1200] <- 0
-
-plot(r)
-
-r_fill <- fill_gaps_gauss(r, 7, weighted = FALSE)
-r_fill_w <- fill_gaps_gauss(r, 7, weighted = TRUE)
-r_fill_w_list <- fill_gaps_gauss(r, 7, weighted = TRUE, include_list = TRUE)
-
-plot(r_fill)
-plot(r_fill_w)
-
-plot(r_fill_w_list$aggregated_list[[3]])
-plot(r_fill_w_list$smooth_up_list[[3]])
-
-plot(r_fill_w_list$smooth_up_list[[1]])
+# library(terra)
+# 
+# f <- system.file("ex/elev.tif", package = "terra")
+# r <- rast(f)
+# plot(r)
+# 
+# r[1200] <- 0
+# 
+# plot(r)
+# 
+# r_fill <- fill_gaps_gauss(r, 7, weighted = FALSE)
+# r_fill_w <- fill_gaps_gauss(r, 7, weighted = TRUE)
+# r_fill_w_list <- fill_gaps_gauss(r, 7, weighted = TRUE, include_list = TRUE)
+# 
+# plot(r_fill)
+# plot(r_fill_w)
+# 
+# plot(r_fill_w_list$aggregated_list[[3]])
+# plot(r_fill_w_list$smooth_up_list[[3]])
+# plot(r_fill_w_list$smooth_up_list[[1]])
 
 # END

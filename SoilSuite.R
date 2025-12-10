@@ -105,7 +105,7 @@ for (i in 1:(nlyr(r_full) - 1)) {
       values = FALSE,
     ) %>% 
     fill_gaps_gauss(
-      nsteps = 9,
+      nsteps = 3,
       weighted = TRUE
     ) %>%
     terra::project(
