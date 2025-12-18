@@ -40,7 +40,10 @@ dir_out <- dir_dat %>%
 tmpfolder <- paste0(root, "/Temp/") %T>%
   dir.create()
 
-terraOptions(tempdir = tmpfolder)
+terraOptions(
+  tempdir = tmpfolder,
+  memfrac = 0.05
+  )
 
 dem_ind <- grepl(
   "dhm",
@@ -90,52 +93,102 @@ newnames_full <- names_full %>%
       paste0("soilsuite_", .)
     )
 
-# Process full extent files
+# # Process bare soil files [ok]
+# 
+# r_bare <- files_bare %>%
+#   rast()
+# 
+# 
+# # Fill gaps
+# 
+# for (i in 1:nlyr(r_bare)) {
+#   r_filled <- r_bare[[i]] %>%
+#     terra::clamp(
+#       lower = 0,
+#       upper = 10000,
+#       values = FALSE,
+#     ) %>% 
+#     fill_gaps_gauss(
+#       nsteps = 9,
+#       weighted = TRUE
+#     )  %>%
+#     terra::project(
+#       x = .,
+#       y = dem,
+#       method = "cubicspline",
+#       mask = TRUE,
+#       threads = 10
+#     ) %>%
+#     mask(
+#       mask = dem
+#     )
+#   
+#   names(r_filled) <- newnames_bare[i]
+#   varnames(r_filled) <- newnames_bare[i]
+#   
+#   r_filled %>% 
+#     terra::clamp(
+#       lower = 0,
+#       upper = 10000,
+#       values = TRUE,
+#       filename = paste0(dir_out, newnames_bare[i], ".tif"),
+#       names = newnames_bare[i],
+#       datatype = "INT2U",
+#       gdal = "TILED=YES"
+#     )
+#   
+#   tmpFiles(remove = TRUE)
+# }
 
-r_full <- files_full %>% rast()
-
-newfiles_full <- dir_out %>%
-  paste0(., newnames_full, ".tif")
-
-for (i in 1:(nlyr(r_full) - 1)) {
-  r_resampled_i <- r_full[[i]] %>%
-    terra::clamp(
-      lower = 0,
-      upper = 10000,
-      values = FALSE,
-    ) %>% 
-    fill_gaps_gauss(
-      nsteps = 3,
-      weighted = TRUE
-    ) %>%
-    terra::project(
-      x = .,
-      y = dem,
-      method = "cubicspline",
-      mask = TRUE,
-      threads = 10
-    ) %>%
-    mask(
-      mask = dem
-    )
-  
-  names(r_resampled_i) <- newnames_full[i]
-  varnames(r_resampled_i) <- newnames_full[i]
-  
-  r_resampled_i %>%
-    terra::clamp(
-      lower = 0,
-      upper = 10000,
-      values = TRUE,
-      filename = newfiles_full[i],
-      names = newnames_full[i],
-      datatype = "INT2U",
-      overwrite = TRUE,
-      gdal = "TILED=YES"
-    )
-
-  tmpFiles(remove = TRUE)
-}
+# # Process full extent files [ok]
+# 
+# r_full <- files_full %>% rast()
+# 
+# newfiles_full <- dir_out %>%
+#   paste0(., newnames_full, ".tif")
+# 
+# for (i in 1:(nlyr(r_full) - 1)) {
+# # for (i in 12:(nlyr(r_full) - 1)) {
+#   r_filled_i <- r_full[[i]] %>%
+#     terra::clamp(
+#       lower = 0,
+#       upper = 10000,
+#       values = FALSE,
+#     ) %>% 
+#     fill_gaps_gauss(
+#       nsteps = 3,
+#       weighted = TRUE
+#     ) 
+#   
+#   r_resampled_i <- r_filled_i %>%
+#     terra::project(
+#       x = .,
+#       y = dem,
+#       method = "cubicspline",
+#       mask = TRUE,
+#       threads = 10
+#     ) %>%
+#     mask(
+#       mask = dem
+#     )
+#   
+#   names(r_resampled_i) <- newnames_full[i]
+#   varnames(r_resampled_i) <- newnames_full[i]
+#   
+#   r_resampled_i %>%
+#     terra::clamp(
+#       lower = 0,
+#       upper = 10000,
+#       values = TRUE,
+#       filename = newfiles_full[i],
+#       names = newnames_full[i],
+#       datatype = "INT2U",
+#       overwrite = TRUE,
+#       gdal = "TILED=YES"
+#     )
+# 
+#   tmpFiles(remove = TRUE)
+# }
 
 # # Bare soil frequency [done]
 # 
@@ -165,52 +218,7 @@ for (i in 1:(nlyr(r_full) - 1)) {
 #     gdal = "TILED=YES"
 #   )
 
-# Process bare soil files
 
-r_bare <- files_bare %>%
-  rast()
-
-
-# Fill gaps
-
-for (i in 1:nlyr(r_bare)) {
-  r_filled <- r_bare[[i]] %>%
-    terra::clamp(
-      lower = 0,
-      upper = 10000,
-      values = FALSE,
-    ) %>% 
-    fill_gaps_gauss(
-      nsteps = 9,
-      weighted = TRUE
-    )  %>%
-    terra::project(
-      x = .,
-      y = dem,
-      method = "cubicspline",
-      mask = TRUE,
-      threads = 10
-    ) %>%
-    mask(
-      mask = dem
-    )
-  
-  names(r_filled) <- newnames_bare[i]
-  varnames(r_filled) <- newnames_bare[i]
-  
-  r_filled %>% 
-    terra::clamp(
-      lower = 0,
-      upper = 10000,
-      values = TRUE,
-      filename = paste0(dir_out, newnames_bare[i], ".tif"),
-      names = newnames_bare[i],
-      datatype = "INT2U",
-      gdal = "TILED=YES"
-    )
-
-  tmpFiles(remove = TRUE)
-}
 
 # # Focal density filter for bare soil extent [done]
 # 
