@@ -33,30 +33,33 @@ tile_shapes <- dir_tiles %>%
 
 cov_files <- dir_cov %>%
   list.files(
-    pattern = ".tif",
+    pattern = "\\.tif$",
     full.names = TRUE
   )
 
 # Select relevant covariates
+# [not this time, splitting all covariates instead]
 
-cov_cats <- dir_code %>%
-  paste0(., "/cov_categories_20231110.csv") %>%
-  read.table(
-    sep = ",",
-    header = TRUE
-  )
+# cov_cats <- dir_code %>%
+#   paste0(., "/cov_categories_20231110.csv") %>%
+#   read.table(
+#     sep = ",",
+#     header = TRUE
+#   )
 
 cov_names_all <- cov_files %>%
   basename() %>%
   tools::file_path_sans_ext(.)
 
-cov_selected <- cov_cats %>%
-  filter(anbm_use == 1) %>%
-  select(name) %>%
-  unlist() %>%
-  unname()
+# cov_selected <- cov_cats %>%
+#   filter(anbm_use == 1) %>%
+#   select(name) %>%
+#   unlist() %>%
+#   unname()
 
-cov_files_selected <- cov_files[cov_names_all %in% cov_selected]
+# cov_files_selected <- cov_files[cov_names_all %in% cov_selected]
+
+cov_files_selected <- cov_files
 
 # Make names for tiles
 
@@ -130,7 +133,10 @@ parSapplyLB(
     my_ext <- paste0(
       dir_mask_tiles, "/Mask_LU_tile_", tile_numbers[j], ".tif"
     ) %>%
-      rast()
+      rast() %>%
+      extend(
+        y = 16  # Expand tiles
+      )
 
     source(paste0(dir_code, "/f_cropstack.R"))
 
@@ -138,7 +144,8 @@ parSapplyLB(
       x = cov_files_selected,
       y = my_ext,
       folder = dir_tile_j,
-      mask = TRUE
+      # mask = TRUE
+      mask = FALSE
     )
   }
 )
