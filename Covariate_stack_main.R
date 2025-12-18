@@ -5,8 +5,8 @@
 
 # First steps:
 #  1: Fix NA values in fuzzy landscape elements and geology. [ok]
-#  2: Add layers from SoilSuite. [!]
-#  3: Add ALOS/PALSAR. [!]
+#  2: Add layers from SoilSuite. [ok]
+#  3: Add ALOS/PALSAR. [ok]
 #  4: ADK wetlands as covariate (fuzzy), based on raw version without landscape
 #     elements [ok].
 
@@ -35,6 +35,65 @@ library(tidyverse)
 library(magrittr)
 library(tidyr)
 library(dplyr)
+library(magrittr)
+library(tools)
 
+dir_code <- getwd()
+root <- dirname(dir_code)
+dir_dat <- root %>%
+  paste0(., "/covariates/")
+
+mycrs <- "EPSG:25832"
+
+dir_cov <- dir_dat %>%
+  paste0(., "/covariates_10m/")
+
+dir_out <- dir_dat %>%
+  paste0(., "/new_covariates/") %T>%
+  dir.create()
+
+files_cov <- dir_cov %>%
+  list.files(
+    pattern = "\\.tif$",
+    full.names = TRUE
+  )
+
+r_cov <- files_cov %>%
+  rast()
+
+
+# Check covariate names
+
+names_cov <- names(r_cov)
+
+basenames_cov <- files_cov %>%
+  basename() %>%
+  file_path_sans_ext()
+
+sum(basenames_cov != names_cov)
+
+names_needfix <- names_cov[basenames_cov != names_cov]
+names_fixed <- basenames_cov[basenames_cov != names_cov]
+
+names_needfix
+names_fixed
+
+# for (i in 1:length(names_needfix)) {
+#   name_i <- names_needfix[i]
+#   
+#   r_i <- terra::subset(r_cov, names_needfix[i])
+#   
+#   names(r_i) <- names_fixed[i]
+#   
+#   datatype(r_i)
+#   
+#   writeRaster(
+#     r_i,
+#     filename = paste0(dir_out, names_fixed[i], ".tif"),
+#     datatype = datatype(r_i),
+#     overwrite = TRUE,
+#     gdal = "TILED=YES"
+#   )
+# }
 
 ### END ###

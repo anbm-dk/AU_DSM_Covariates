@@ -86,7 +86,7 @@ my_focal_weights <- focalMat(
 # wl_twolayers_fuzzy_sum <- sum(wl_twolayers_fuzzy)
 # wl_fuzzy_norm <- wl_twolayers_fuzzy[[1]] / wl_twolayers_fuzzy_sum
 # wl_fuzzy_norm_round <- round(wl_fuzzy_norm, digits = 2)
-# names(wl_fuzzy_norm_round) <- "/fuzzy_adk_wetlands"
+# names(wl_fuzzy_norm_round) <- "fuzzy_adk_wetlands"
 # 
 # writeRaster(
 #   wl_fuzzy_norm_round,
