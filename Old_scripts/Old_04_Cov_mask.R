@@ -30,8 +30,10 @@ crs(basemap) <- mycrs
 rcl_table_full <- dir_code %>%
   paste0(., "/LU_basemap_mask.csv") %>%
   read.table(
-    ., header = TRUE, sep = ";"
-  ) %>% mutate(
+    .,
+    header = TRUE, sep = ";"
+  ) %>%
+  mutate(
     Mask = case_when(
       Mask == 1 ~ 1,
       .default = NA
@@ -131,13 +133,13 @@ parSapplyLB(
   1:length(tile_shapes),
   function(j) {
     tmpfolder <- paste0(dir_dat, "/Temp/")
-    
+
     terraOptions(memfrac = 0.02, tempdir = tmpfolder)
-    
+
     tile_shapes <- dir_tiles %>%
       base::paste0(., "/tiles.shp") %>%
       terra::vect()
-    
+
     mask_r <- rast(mask_file)
 
     crop(
@@ -145,7 +147,7 @@ parSapplyLB(
       y = tile_shapes[j],
       filename = paste0(
         dir_mask_tiles, "/Mask_LU_tile_", tile_numbers[j], ".tif"
-        ),
+      ),
       datatype = "INT1U",
       overwrite = TRUE
     )

@@ -1,10 +1,10 @@
 # Function to fill gaps in raster
 
 fill_gaps_gauss <- function(
-    inrast,
-    nsteps,
-    include_list = FALSE,
-    weighted
+  inrast,
+  nsteps,
+  include_list = FALSE,
+  weighted
 ) {
   require(terra)
   require(magrittr)
@@ -20,12 +20,12 @@ fill_gaps_gauss <- function(
     as.vector() %>%
     matrix(ncol = 5) %>%
     round(3)
-  
+
   smooth_up_list <- list()
   aggregated_list <- list()
   aggregated_list[[1]] <- c(
-    inrast*0 + 1,    # Number of cells
-    inrast           # Cell values
+    inrast * 0 + 1, # Number of cells
+    inrast # Cell values
   )
   names(aggregated_list[[1]]) <- c("count", "mean")
   # Stepwise smoothing and aggregation
@@ -37,12 +37,12 @@ fill_gaps_gauss <- function(
         product_i
       ) %>%
         terra::focal(
-        w = myfilter,
-        fun = "sum",
-        na.policy = "all",
-        # na.policy = "omit",
-        na.rm = TRUE
-      ) %>%
+          w = myfilter,
+          fun = "sum",
+          na.policy = "all",
+          # na.policy = "omit",
+          na.rm = TRUE
+        ) %>%
         terra::aggregate(
           fun = "sum",
           # na.rm = TRUE
@@ -62,7 +62,7 @@ fill_gaps_gauss <- function(
         na.rm = TRUE
       )
       aggregated_list[[i]] <- terra::aggregate(
-        smoothed_down,  
+        smoothed_down,
         fun = "mean",
         na.rm = TRUE
       )
@@ -96,12 +96,11 @@ fill_gaps_gauss <- function(
           na.policy = "omit",
           na.rm = TRUE
         )
-      
+
       smooth_up_list[[i]] <- c(
         smoothed_i[[1]],
         smoothed_i[[2]] / smoothed_i[[1]]
       )
-      
     } else {
       # Merge with aggregated layers
       merged <- terra::merge(
@@ -117,7 +116,6 @@ fill_gaps_gauss <- function(
         na.rm = TRUE
       )
     }
-    
   }
   # Divide mean values by the number of cells, to get a weighted mean
   if (!weighted) {
@@ -127,7 +125,7 @@ fill_gaps_gauss <- function(
     # final_lyr <- smooth_up_list[[1]][[2]] / smooth_up_list[[1]][[1]]
   }
   dtyp_inrast <- datatype(inrast)
-  if(dtyp_inrast != "") {
+  if (dtyp_inrast != "") {
     my_wopt <- list(datatype = datatype(inrast))
   } else {
     my_wopt <- list()
@@ -153,22 +151,22 @@ fill_gaps_gauss <- function(
 }
 
 # library(terra)
-# 
+#
 # f <- system.file("ex/elev.tif", package = "terra")
 # r <- rast(f)
 # plot(r)
-# 
+#
 # r[1200] <- 0
-# 
+#
 # plot(r)
-# 
+#
 # r_fill <- fill_gaps_gauss(r, 7, weighted = FALSE)
 # r_fill_w <- fill_gaps_gauss(r, 7, weighted = TRUE)
 # r_fill_w_list <- fill_gaps_gauss(r, 7, weighted = TRUE, include_list = TRUE)
-# 
+#
 # plot(r_fill)
 # plot(r_fill_w)
-# 
+#
 # plot(r_fill_w_list$aggregated_list[[3]])
 # plot(r_fill_w_list$smooth_up_list[[3]])
 # plot(r_fill_w_list$smooth_up_list[[1]])

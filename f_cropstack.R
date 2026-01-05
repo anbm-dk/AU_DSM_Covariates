@@ -1,10 +1,10 @@
 # Function for cropping covariates
 
 cropstack <- function(
-    x, # list of files
-    y, # extent, polygon or raster
-    folder, # target folder
-    mask = FALSE # Use y for masking?
+  x, # list of files
+  y, # extent, polygon or raster
+  folder, # target folder
+  mask = FALSE # Use y for masking?
 ) {
   for (i in 1:length(x)) {
     require(terra)

@@ -301,14 +301,14 @@ crs(dem) <- mycrs
 # )
 
 # 3.6: Fill holes in terodep (2023-12-19)
-# 
+#
 # terodep_files <- cov_files %>%
 #   grep('terodep', ., value = TRUE)
-# 
+#
 # dir_cov_renamed <- dir_dat %>%
 #   paste0(., "/covariates_renamed/") %T>%
 #   dir.create()
-# 
+#
 # for (i in 1:length(terodep_files)) {
 #   r <- terodep_files[i] %>% rast()
 #   dtyp <- datatype(r)
@@ -337,11 +337,11 @@ crs(dem) <- mycrs
 
 # aspect_files <- cov_files %>%
 #   grep('aspect_radians', ., value = TRUE)
-# 
+#
 # dir_cov_renamed <- dir_dat %>%
 #   paste0(., "/covariates_renamed/") %T>%
 #   dir.create()
-# 
+#
 # for (i in 1:length(aspect_files)) {
 #   r <- aspect_files[i] %>% rast()
 #   dtyp <- datatype(r)
@@ -510,12 +510,14 @@ cov_files <- dir_cov %>%
 cov_origin <- cov_files %>% rast()
 cov_origin_lyrnames <- names(cov_origin)
 
-cov_origin_filenames <- cov_files %>% basename() %>% tools::file_path_sans_ext()
+cov_origin_filenames <- cov_files %>%
+  basename() %>%
+  tools::file_path_sans_ext()
 
 mismatches <- cbind(
   cov_origin_filenames,
   cov_origin_lyrnames
-  )[cov_origin_filenames != cov_origin_lyrnames]
+)[cov_origin_filenames != cov_origin_lyrnames]
 
 mismatches
 
@@ -524,20 +526,19 @@ changethese <- cov_files[cov_origin_filenames != cov_origin_lyrnames]
 # Correct it if they do not match
 
 if (length(changethese) > 0) {
-  
   dir_cov_renamed <- dir_dat %>%
     paste0(., "/covariates_renamed/") %T>%
     dir.create()
-  
+
   library(parallel)
-  
+
   numCores <- detectCores()
   numCores
-  
+
   showConnections()
-  
+
   cl <- makeCluster(numCores)
-  
+
   clusterEvalQ(
     cl,
     {
@@ -547,39 +548,40 @@ if (length(changethese) > 0) {
       library(tools)
     }
   )
-  
+
   clusterExport(
     cl,
-    c("mycrs",
+    c(
+      "mycrs",
       "dir_cov_renamed",
       "changethese",
       "tmpfolder"
     )
   )
-  
+
   parSapplyLB(
     cl,
     changethese,
     function(x) {
       terraOptions(memfrac = 0.02, tempdir = tmpfolder)
-      
+
       r <- x %>% rast()
-      
+
       dtyp <- datatype(r)
-      
+
       newname_x <- sources(r) %>%
         basename() %>%
         file_path_sans_ext() %>%
         gsub("\\.", "_", .) %>%
         gsub("-", "_", .) %>%
         tolower()
-      
+
       crs(r) <- mycrs
       names(r) <- newname_x
-      
+
       outname_x <- dir_cov_renamed %>%
         paste0(., "/", newname_x, ".tif")
-      
+
       writeRaster(
         r,
         datatype = dtyp,
@@ -587,15 +589,15 @@ if (length(changethese) > 0) {
         overwrite = TRUE,
         gdal = "TILED=YES"
       )
-      
+
       return(NA)
     }
   )
-  
+
   stopCluster(cl)
   foreach::registerDoSEQ()
   rm(cl)
-  
+
   dir_cov_renamed %>%
     list.files(full.names = TRUE) %>%
     rast() %>%

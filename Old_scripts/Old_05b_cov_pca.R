@@ -56,15 +56,15 @@ cov_use <- terra::subset(cov, cov_selected)
 # missing_islands <- dir_dat %>%
 #   paste0(., "/layers/missing_islands_20231219.shp") %>%
 #   vect()
-# 
+#
 # terra::extract(cov_use, missing_islands) %>%
 #   apply(., 2, function(x) sum(is.na(x))) %>%
 #   .[. != 0]
 
 # Drop cost_dist
 # Fill holes in terodep
- 
-# cost_dist terodep10m 
+
+# cost_dist terodep10m
 # 110         54
 
 # Extract points from tiles in parallel
@@ -111,18 +111,18 @@ pts_tiles <- parSapplyLB(
   1:length(subdir_tiles),
   function(j) {
     set.seed(1)
-    
+
     cov_x_files <- subdir_tiles[j] %>%
       list.files(full.names = TRUE)
-    
+
     cov_x_names <- cov_x_files %>%
       basename() %>%
       file_path_sans_ext()
-    
+
     cov_x <- cov_x_files %>% rast()
-    
+
     names(cov_x) <- cov_x_names
-    
+
     cov_pts_x <- terra::spatSample(
       x = cov_x,
       size = ncell(cov_x) / cells_per_pt,
@@ -131,7 +131,7 @@ pts_tiles <- parSapplyLB(
       xy = TRUE,
       exp = 1
     )
-    
+
     return(cov_pts_x)
   },
   simplify = FALSE,
@@ -177,8 +177,8 @@ cov_pts %<>%
 
 covnames_dropogc <- cov_pts %>%
   colnames() %>%
-  grep('ogc_pi', ., value = TRUE, invert = TRUE) %>%
-  grep('PC', ., value = TRUE, invert = TRUE)
+  grep("ogc_pi", ., value = TRUE, invert = TRUE) %>%
+  grep("PC", ., value = TRUE, invert = TRUE)
 
 cov_pts_dropogc <- cov_pts[, colnames(cov_pts) %in% covnames_dropogc]
 
@@ -227,31 +227,31 @@ test_pca_10km <- TRUE
 
 if (test_pca_10km) {
   # Load covariates for the test area
-  
+
   dir_cov_10km <- dir_dat %>%
     paste0(., "/testarea_10km/covariates/")
-  
+
   cov_10km <- dir_cov_10km %>%
     list.files(full.names = TRUE) %>%
     rast() %>%
     subset(covnames_dropogc)
-  
+
   # spatSample(cov_10km, 100000) %>%
   #   apply(., 2, function(x) sum(is.na(x))) %>%
   #   .[. != 0]
-  
+
   # Set NAs to zero for terodep10m and the sine and cosine of the aspect
-  
+
   cov_10km$terodep10m %<>% terra::subst(., NA, 0)
   cov_10km$cos_aspect_radians %<>% terra::subst(., NA, 0)
-  cov_10km$sin_aspect_radians  %<>% terra::subst(., NA, 0)
-  
+  cov_10km$sin_aspect_radians %<>% terra::subst(., NA, 0)
+
   # Predict PCs for the test area
-  
-  pcs_10km  <- terra::predict(cov_10km, pcs, na.rm = TRUE)
-  
+
+  pcs_10km <- terra::predict(cov_10km, pcs, na.rm = TRUE)
+
   library(tidyterra)
-  
+
   tiff(
     paste0(dir_dat, "/cov_pca_10km.tiff"),
     width = 23,
@@ -259,30 +259,30 @@ if (test_pca_10km) {
     units = "cm",
     res = 300
   )
-  
+
   pcs_10km %>%
     terra::subset(1:10) %>%
     autoplot() +
-    facet_wrap(~ lyr, ncol = 5)
-  
+    facet_wrap(~lyr, ncol = 5)
+
   try(dev.off())
 }
 
 
 # # Predict pcs for the entire country
-# 
+#
 # library(parallel)
 # library(dplyr)
 # library(foreach)
 # library(stringr)
-# 
+#
 # dir_cov <- dir_dat %>% paste0(., "/covariates")
 # cov_files <- dir_cov %>% list.files()
 # cov_names <- cov_files %>% tools::file_path_sans_ext()
 # n_digits <- 3
-# 
+#
 # # Function for predicting pcs
-# 
+#
 # predict_pcs <- function(mod, dat, n_digits = NULL, ...) {
 #   rfun2 <- function(mod2, dat2, n_digits2, ...) {
 #     out2 <- predict(
@@ -298,27 +298,27 @@ if (test_pca_10km) {
 #   out <- rfun2(mod, dat, n_digits, ...)
 #   return(out)
 # }
-# 
+#
 # # Tiles for model prediction
-# 
+#
 # numCores <- detectCores()
 # numCores
-# 
+#
 # dir_tiles <- dir_dat %>%
 #   paste0(., "/tiles_591/")
-# 
+#
 # subdir_tiles <- dir_tiles %>%
 #   list.dirs() %>%
 #   .[-1]
-# 
+#
 # dir_pcs <- dir_dat %>%
 #   paste0(., "/pcs/") %T>%
 #   dir.create()
-# 
+#
 # showConnections()
-# 
+#
 # cl <- makeCluster(numCores)
-# 
+#
 # clusterEvalQ(
 #   cl,
 #   {
@@ -330,7 +330,7 @@ if (test_pca_10km) {
 #     library(stats)
 #   }
 # )
-# 
+#
 # clusterExport(
 #   cl,
 #   c("pcs",
@@ -342,30 +342,30 @@ if (test_pca_10km) {
 #     "predict_pcs"
 #   )
 # )
-# 
+#
 # parSapplyLB(
 #   cl,
 #   1:length(subdir_tiles),
 #   function(x) {
 #     tmpfolder <- paste0(dir_dat, "/Temp/")
-#     
+#
 #     terraOptions(memfrac = 0.02, tempdir = tmpfolder)
-#     
+#
 #     cov_x_files <- subdir_tiles[x] %>%
 #       list.files(full.names = TRUE)
-#     
+#
 #     cov_x_names <- cov_x_files %>%
 #       basename() %>%
 #       file_path_sans_ext()
-#     
+#
 #     cov_x <- cov_x_files %>% rast()
-#     
+#
 #     names(cov_x) <- cov_x_names
-#     
+#
 #     cov_x2 <- subset(cov_x, rownames(pcs$rotation))
-#     
+#
 #     tilename_x <- basename(subdir_tiles[x])
-#     
+#
 #     pcs_tilex <- predict(
 #       cov_x2,
 #       pcs,
@@ -374,7 +374,7 @@ if (test_pca_10km) {
 #       n_digits = n_digits,
 #       overwrite = TRUE
 #     )
-#     
+#
 #     for (k in 1:nlyr(pcs_tilex)) {
 #       writeRaster(
 #         pcs_tilex[[k]],
@@ -382,22 +382,22 @@ if (test_pca_10km) {
 #         overwrite = TRUE
 #       )
 #     }
-#     
+#
 #     write.table(1, file = paste0(dir_pcs,"/", tilename_x, "_done.csv"))
-#     
+#
 #     return(NULL)
 #   }
 # )
-# 
+#
 # stopCluster(cl)
 # foreach::registerDoSEQ()
 # rm(cl)
-# 
+#
 # for(k in 1:num_pcs) {
 #   outtiles_pc_k <- subdir_tiles %>%
 #     paste0(., "/PC", k, ".tif") %>%
 #     sprc()
-#   
+#
 #   merge(
 #     outtiles_pc_k,
 #     filename = paste0(

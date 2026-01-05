@@ -79,7 +79,7 @@ source("f_cropstack.R")
 # Mask all covariates
 
 cov_files_notogc <- cov_files_selected %>%
-  grep('ogc_pi', ., value = TRUE, invert = TRUE)
+  grep("ogc_pi", ., value = TRUE, invert = TRUE)
 
 library(parallel)
 
@@ -123,7 +123,7 @@ parSapplyLB(
     dir_tile_j <- dir_tiles %>%
       paste0(., "/tile_", tile_numbers[j], "/") %T>%
       dir.create()
-    
+
     my_ext <- paste0(
       dir_mask_tiles, "/Mask_LU_tile_", tile_numbers[j], ".tif"
     ) %>%

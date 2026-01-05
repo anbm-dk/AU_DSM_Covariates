@@ -21,8 +21,8 @@ cov_list_30m <- cov_files_30m %>%
       out <- rast(x)
       crs(out) <- "EPSG:25832"
       return(out)
-      }
-    )
+    }
+  )
 
 cov_list_30m
 
@@ -49,7 +49,7 @@ iscorrext_ext <- cov_ext_30m %>%
     sum
   ) %>%
   equals(4)
-  
+
 hascorrext_ext1 <- cov_list_30m[[which(iscorrext_ext)[1]]] %>% rast()
 
 cov_list_30m %>%
@@ -64,27 +64,26 @@ decimals_dtyp_corrected <- data.frame(
     .[which(!iscorrext_ext)],
   decimals = c(2, 1, 0),
   dtyp = c("FLT4S", "FLT4S", "INT2U")
-  
 )
 
 for (i in which(!iscorrext_ext)) {
   rast_name <- names(cov_list_30m[[i]])
-  
+
   decimals_i <- decimals_dtyp_corrected %>%
     filter(name == rast_name) %>%
     select(decimals) %>%
     unlist() %>%
     unname()
-  
+
   rast_resamp <- resample(
     x = cov_list_30m[[i]],
     y = hascorrext_ext1
-    ) %>%
+  ) %>%
     round(digits = decimals_i)
-  
+
   names(rast_resamp) <- rast_name
   varnames(rast_resamp) <- rast_name
-  
+
   cov_list_30m[[i]] <- rast_resamp
 }
 
@@ -101,12 +100,11 @@ dir_newstack <- getwd() %>%
 
 dir_newstack
 
-for(i in 1:length(cov_list_30m)) {
-  
+for (i in 1:length(cov_list_30m)) {
   rast_name <- names(cov_list_30m[[i]])
-  
+
   dtyp_i <- dtypes[i]
-  
+
   if (dtyp_i == "") {
     dtyp_i <- decimals_dtyp_corrected %>%
       filter(name == rast_name) %>%
@@ -114,7 +112,7 @@ for(i in 1:length(cov_list_30m)) {
       unlist() %>%
       unname()
   }
-  
+
   writeRaster(
     x = cov_list_30m[[i]],
     filename = dir_newstack %>%
@@ -125,7 +123,6 @@ for(i in 1:length(cov_list_30m)) {
     gdal = "TILED=YES"
   )
 }
-
 
 
 # END

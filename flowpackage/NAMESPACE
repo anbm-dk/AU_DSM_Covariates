@@ -1,0 +1,4 @@
+useDynLib(flowpackage, .registration=TRUE)
+export("localflowCpp")
+importFrom(Rcpp, evalCpp)
+exportPattern("^[[:alpha:]]+")

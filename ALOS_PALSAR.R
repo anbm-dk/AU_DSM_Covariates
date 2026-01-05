@@ -50,10 +50,10 @@ files_alos <- dir_alos %>%
 # New names
 
 newnames <- paste0(
-  "alos_palsar_2017_2021_sar_", 
+  "alos_palsar_2017_2021_sar_",
   c("HH", "HH", "HV", "HV"),
   c("_mean", "_sd")
-  )
+)
 
 newfiles_string <- tmpfolder %>%
   paste0("/", newnames, ".tif")

@@ -43,7 +43,7 @@ tmpfolder <- paste0(root, "/Temp/") %T>%
 terraOptions(
   tempdir = tmpfolder,
   memfrac = 0.05
-  )
+)
 
 dem_ind <- grepl(
   "dhm",
@@ -87,27 +87,28 @@ names_full <- basename(files_full) %>%
 newnames_full <- names_full %>%
   str_subset(pattern = "baresoil", negate = TRUE) %>%
   paste0("soilsuite_MREF_", .) %>%
-  c(., 
+  c(
+    .,
     names_full %>%
       str_subset(pattern = "baresoil", negate = FALSE) %>%
       paste0("soilsuite_", .)
-    )
+  )
 
 # # Process bare soil files [ok]
-# 
+#
 # r_bare <- files_bare %>%
 #   rast()
-# 
-# 
+#
+#
 # # Fill gaps
-# 
+#
 # for (i in 1:nlyr(r_bare)) {
 #   r_filled <- r_bare[[i]] %>%
 #     terra::clamp(
 #       lower = 0,
 #       upper = 10000,
 #       values = FALSE,
-#     ) %>% 
+#     ) %>%
 #     fill_gaps_gauss(
 #       nsteps = 9,
 #       weighted = TRUE
@@ -122,11 +123,11 @@ newnames_full <- names_full %>%
 #     mask(
 #       mask = dem
 #     )
-#   
+#
 #   names(r_filled) <- newnames_bare[i]
 #   varnames(r_filled) <- newnames_bare[i]
-#   
-#   r_filled %>% 
+#
+#   r_filled %>%
 #     terra::clamp(
 #       lower = 0,
 #       upper = 10000,
@@ -136,17 +137,17 @@ newnames_full <- names_full %>%
 #       datatype = "INT2U",
 #       gdal = "TILED=YES"
 #     )
-#   
+#
 #   tmpFiles(remove = TRUE)
 # }
 
 # # Process full extent files [ok]
-# 
+#
 # r_full <- files_full %>% rast()
-# 
+#
 # newfiles_full <- dir_out %>%
 #   paste0(., newnames_full, ".tif")
-# 
+#
 # for (i in 1:(nlyr(r_full) - 1)) {
 # # for (i in 12:(nlyr(r_full) - 1)) {
 #   r_filled_i <- r_full[[i]] %>%
@@ -154,12 +155,12 @@ newnames_full <- names_full %>%
 #       lower = 0,
 #       upper = 10000,
 #       values = FALSE,
-#     ) %>% 
+#     ) %>%
 #     fill_gaps_gauss(
 #       nsteps = 3,
 #       weighted = TRUE
-#     ) 
-#   
+#     )
+#
 #   r_resampled_i <- r_filled_i %>%
 #     terra::project(
 #       x = .,
@@ -171,10 +172,10 @@ newnames_full <- names_full %>%
 #     mask(
 #       mask = dem
 #     )
-#   
+#
 #   names(r_resampled_i) <- newnames_full[i]
 #   varnames(r_resampled_i) <- newnames_full[i]
-#   
+#
 #   r_resampled_i %>%
 #     terra::clamp(
 #       lower = 0,
@@ -186,12 +187,12 @@ newnames_full <- names_full %>%
 #       overwrite = TRUE,
 #       gdal = "TILED=YES"
 #     )
-# 
+#
 #   tmpFiles(remove = TRUE)
 # }
 
 # # Bare soil frequency [done]
-# 
+#
 # r_full_freq_resampled <- r_full[[nlyr(r_full)]] %>%
 #   terra::project(
 #     x = .,
@@ -203,10 +204,10 @@ newnames_full <- names_full %>%
 #   mask(
 #     mask = dem
 #   )
-# 
+#
 # names(r_full_freq_resampled) <- newnames_full[nlyr(r_full)]
 # varnames(r_full_freq_resampled) <- newnames_full[nlyr(r_full)]
-# 
+#
 # r_full_freq_resampled %>%
 #   terra::math(
 #     "round",
@@ -219,9 +220,8 @@ newnames_full <- names_full %>%
 #   )
 
 
-
 # # Focal density filter for bare soil extent [done]
-# 
+#
 # r_bare_mask <- paste0(
 #   dir_soilsuite,
 #   "/mask.tif"
@@ -231,16 +231,16 @@ newnames_full <- names_full %>%
 #     from = c(2:3),
 #     to = c(NA, NA)
 #   )
-# 
+#
 # newname_bare_mask <- "soilsuite_bare_mask_density"
 # newfile_bare_mask <- dir_out %>%
 #   paste0(., newname_bare_mask, ".tif")
-# 
+#
 # r_bare_mask_dens <- r_bare_mask %>%
 #   focal_density(
 #     nsteps = 9
 #   )
-# 
+#
 # r_bare_mask_dens_resampled <- r_bare_mask_dens$final %>%
 #   terra::project(
 #     x = .,
@@ -252,10 +252,10 @@ newnames_full <- names_full %>%
 #   mask(
 #     mask = dem
 #   )
-# 
+#
 # names(r_bare_mask_dens_resampled) <- newname_bare_mask
 # varnames(r_bare_mask_dens_resampled) <- newname_bare_mask
-# 
+#
 # r_bare_mask_dens_resampled %>%
 #   terra::math(
 #     "round",

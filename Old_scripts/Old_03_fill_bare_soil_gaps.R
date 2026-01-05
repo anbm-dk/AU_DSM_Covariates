@@ -14,7 +14,7 @@ tmpfolder <- paste0(dir_dat, "/Temp/")
 terraOptions(
   tempdir = tmpfolder,
   memfrac = 0.3
-  )
+)
 
 mycrs <- "EPSG:25832"
 
@@ -84,7 +84,7 @@ names_in <- cov_cats %>%
   filter(
     category == "bare_soil",
     scorpan == "S"
-    ) %>%
+  ) %>%
   select(name) %>%
   unlist() %>%
   unname()
@@ -92,9 +92,9 @@ names_in <- cov_cats %>%
 # Function to fill gaps
 
 fill_gaps_gauss <- function(
-    inrast,
-    nsteps,
-    include_list = FALSE
+  inrast,
+  nsteps,
+  include_list = FALSE
 ) {
   r1 <- rast(ncols = 180, nrows = 180, xmin = 0)
   myfilter1 <- round(
@@ -102,11 +102,11 @@ fill_gaps_gauss <- function(
     3
   )
   myfilter2 <- myfilter1
-  
+
   smooth_up_list <- list()
   aggregated_list <- list()
   aggregated_list[[1]] <- c(
-    inrast*0 + 1,
+    inrast * 0 + 1,
     inrast
   )
   names(aggregated_list[[1]]) <- c("count", "mean")
@@ -120,7 +120,7 @@ fill_gaps_gauss <- function(
       na.rm = TRUE
     )
     aggregated_list[[i]] <- terra::aggregate(
-      smoothed_down,  
+      smoothed_down,
       fun = "mean",
       na.rm = TRUE
     )
@@ -176,14 +176,14 @@ for (j in 1:length(names_in)) {
   # Mask all layers (especially s1), to the same extent.
   # Mainly to reduce the effect from edge cells.
   r <- paste0(dir_cov, names_in[[j]], ".tif") %>% rast()
-  
+
   r_masked <- mask(r, mask = bare_mask, datatype = datatype(r))
-  
+
   r2 <- fill_gaps_gauss(
     r_masked,
     11
-    )
-  
+  )
+
   r3 <- mask(
     r2$final,
     dem,
@@ -192,7 +192,7 @@ for (j in 1:length(names_in)) {
     datatype = datatype(r),
     gdal = "TILED=YES"
   )
-  
+
   tmpFiles(remove = TRUE)
 }
 

@@ -16,7 +16,7 @@ dir_dat <- root %>%
   paste0(., "/covariates/")
 dir_cov <- dir_dat %>%
   paste0(., "/covariates_10m/")
-  
+
 mycrs <- "EPSG:25832"
 
 dem <- dir_cov %>%

@@ -1,9 +1,9 @@
 # Focal density
 
 focal_density <- function(
-    inrast,
-    nsteps,
-    include_list = FALSE
+  inrast,
+  nsteps,
+  include_list = FALSE
 ) {
   r1 <- rast(ncols = 180, nrows = 180, xmin = 0)
   myfilter1 <- round(
@@ -11,14 +11,14 @@ focal_density <- function(
     3
   )
   myfilter2 <- myfilter1
-  
+
   smooth_up_list <- list()
   aggregated_list <- list()
   # aggregated_list[[1]] <- c(
   #   inrast*0 + 1,    # Number of cells
   #   inrast           # Cell values
   # )
-  aggregated_list[[1]] <- inrast*0 + 1
+  aggregated_list[[1]] <- inrast * 0 + 1
   # names(aggregated_list[[1]]) <- c("count", "mean")
   # Stepwise smoothing and aggregation
   for (i in 2:nsteps) {
@@ -32,7 +32,7 @@ focal_density <- function(
       fillvalue = 0
     )
     aggregated_list[[i]] <- terra::aggregate(
-      smoothed_down,  
+      smoothed_down,
       fun = "mean",
       na.rm = TRUE
     )
@@ -70,7 +70,7 @@ focal_density <- function(
   out <- list()
   # Merge with input layer
   dtyp_inrast <- datatype(inrast)
-  if(dtyp_inrast != "") {
+  if (dtyp_inrast != "") {
     my_wopt <- list(datatype = datatype(inrast))
   } else {
     my_wopt <- list()
@@ -90,12 +90,12 @@ focal_density <- function(
 # f <- system.file("ex/elev.tif", package = "terra")
 # r <- rast(f)
 # plot(r)
-# 
-# 
+#
+#
 # r_dens <- focal_density(r, 6)
 # # r_dens <- fill_gaps_gauss(r * 0 + 1, 6)
-# 
-# 
+#
+#
 # plot(r_dens$final)
 
 # END

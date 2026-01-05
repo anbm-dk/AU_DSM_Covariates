@@ -53,27 +53,27 @@ wetland_ind <- grepl(
 
 wetlands_crisp <- cov_files[wetland_ind] %>% rast()
 # drylands_crisp <- 1 - wetlands_crisp
-# 
+#
 # wl_twolayers_crisp <- c(wetlands_crisp, drylands_crisp)
 
 my_focal_weights <- focalMat(
   wetlands_crisp,
   c(10, 20),
-  type = c('Gauss')
+  type = c("Gauss")
 )
-# 
+#
 # wl_twolayers_fuzzy <- focal(
 #   wl_twolayers_crisp,
 #   w = my_focal_weights,
 #   na.policy = "omit",
 #   na.rm = TRUE
 # )
-# 
+#
 # wl_twolayers_fuzzy_sum <- sum(wl_twolayers_fuzzy)
 # wl_fuzzy_norm <- wl_twolayers_fuzzy[[1]] / wl_twolayers_fuzzy_sum
 # wl_fuzzy_norm_round <- round(wl_fuzzy_norm, digits = 2)
 # names(wl_fuzzy_norm_round) <- "wetlands_10m_fuzzy"
-# 
+#
 # writeRaster(
 #   wl_fuzzy_norm_round,
 #   filename = paste0(tmpfolder, "/wetlands_10m_fuzzy.tif"),
@@ -88,21 +88,21 @@ my_focal_weights <- focalMat(
 #   "geology",
 #   cov_files
 # )
-# 
+#
 # geology_crisp <- cov_files[geology_ind] %>% rast()
-# 
+#
 # geology_sum <- sum(geology_crisp)
 # geology_res <- 1 - geology_sum
 # names(geology_res) <- "geology_res"
 # geology_crisp_full <- c(geology_crisp, geology_res)
-# 
+#
 # geology_fuzzy <- focal(
 #   geology_crisp_full,
 #   w = my_focal_weights,
 #   na.policy = "omit",
 #   na.rm = TRUE
 # )
-# 
+#
 # geology_fuzzy_sum <- sum(geology_fuzzy)
 # geology_fuzzy_norm <- geology_fuzzy / geology_fuzzy_sum
 # geology_fuzzy_norm_round <- round(geology_fuzzy_norm, digits = 2)
@@ -110,7 +110,7 @@ my_focal_weights <- focalMat(
 # geology_names_fuzzy <- paste0("fuzzy_", geology_names)
 # geology_files_fuzzy <- paste0(tmpfolder, geology_names_fuzzy, ".tif")
 # names(geology_fuzzy_norm_round) <- geology_names_fuzzy
-# 
+#
 # for (i in 1:nlyr(geology_fuzzy_norm_round)) {
 #   writeRaster(
 #     geology_fuzzy_norm_round[[i]],
@@ -132,7 +132,7 @@ fuzzify_indicators <- function(
   outfolder = NULL
 ) {
   x_sum <- sum(x)
-  
+
   if (residual_layer) {
     x_res <- 1 - x_sum
     names(x_res) <- "x_res"
@@ -140,28 +140,28 @@ fuzzify_indicators <- function(
   } else {
     x_crisp_full <- x
   }
-  
+
   if (aggregation_factor > 1) {
     x_crisp_full <- terra::aggregate(
       x_crisp_full,
       fact = aggregation_factor,
       fun = "sum",
-      na.rm = TRUE  # NB!
+      na.rm = TRUE # NB!
     )
-    
+
     x_fuzzy <- focal(
       x_crisp_full,
       w = local_filter,
       na.policy = "all",
       na.rm = TRUE
     )
-    
+
     x_fuzzy <- terra::resample(
       x = x_fuzzy,
       y = x,
       method = "cubicspline"
     )
-    
+
     x_fuzzy <- mask(
       x_fuzzy,
       mask = x[[1]]
@@ -192,7 +192,7 @@ fuzzify_indicators <- function(
       gdal = "TILED=YES"
     )
   }
-  
+
   invisible(NULL)
 }
 
@@ -202,9 +202,9 @@ fuzzify_indicators <- function(
 #   "landscape",
 #   cov_files
 # )
-# 
+#
 # landscape_crisp <- cov_files[landscape_ind] %>% rast()
-# 
+#
 # fuzzify_indicators(
 #   landscape_crisp,
 #   aggregation_factor = 5,
@@ -219,9 +219,9 @@ fuzzify_indicators <- function(
 #   "georeg_",
 #   cov_files
 # )
-# 
+#
 # georeg_crisp <- cov_files[georeg_ind] %>% rast()
-# 
+#
 # fuzzify_indicators(
 #   georeg_crisp,
 #   aggregation_factor = 5,
@@ -233,7 +233,8 @@ fuzzify_indicators <- function(
 # Sigma experiment
 
 r1 <- matrix(
-  sample(c(0,1), 400, replace = TRUE), nrow = 20
+  sample(c(0, 1), 400, replace = TRUE),
+  nrow = 20
 ) %>%
   rast()
 
@@ -245,7 +246,7 @@ plot(r2)
 
 # halfsigma <- focalMat(r1, d = c(0.56, 2), type = 'Gauss')
 
-halfsigma <- focalMat(r1, d = c(0.5, 1), type = 'Gauss')
+halfsigma <- focalMat(r1, d = c(0.5, 1), type = "Gauss")
 
 halfsigma
 
@@ -268,9 +269,9 @@ r3 - r1
 #   "lu_",
 #   cov_files
 # )
-# 
+#
 # lu_crisp <- cov_files[lu_ind] %>% rast()
-# 
+#
 # fuzzify_indicators(
 #   lu_crisp,
 #   local_filter = halfsigma,
@@ -285,26 +286,26 @@ r3 - r1
 #   cov_files,
 #   value = TRUE
 # )
-# 
+#
 # for (i in 1:length(imk_files)) {
 #   r <- rast(imk_files[i])
-#   
+#
 #   newname <- names(r) %>% paste0("fuzzy_", .)
-#   
+#
 #   r_fuzzy <- x_fuzzy <- focal(
 #     r,
 #     w = halfsigma,
 #     na.policy = "omit",
 #     na.rm = TRUE
 #   )
-#   
+#
 #   r_fuzzy_round <- round(
 #     r_fuzzy,
 #     digits = 2
 #   )
-#   
+#
 #   names(r_fuzzy_round) <- newname
-#   
+#
 #   writeRaster(
 #     r_fuzzy_round,
 #     filename = paste0(tmpfolder, "/", newname, ".tif"),
@@ -320,7 +321,8 @@ r3 - r1
 s2_count <- dir_dat %>%
   paste0(
     ., "layers/s2_geomedian_count.tif"
-  ) %>% rast()
+  ) %>%
+  rast()
 
 names(s2_count) <- "s2_geomedian_count"
 
@@ -344,7 +346,7 @@ writeRaster(
   overwrite = TRUE,
   gdal = "TILED=YES"
 )
-  
+
 halfsigma_round <- round(halfsigma, digits = 2)
 
 s2_count_max10_fuzzy <- focal(

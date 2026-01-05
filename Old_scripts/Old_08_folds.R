@@ -217,7 +217,7 @@ fun1 <- function(x, n_layers = 1) {
   # }
   out <- matrix(numeric(), nrow = length(x), ncol = n_layers)
   sumNA <- sum(is.na(x))
-  out[!is.na(x), ] <- 0 + rpois(n_layers*(length(x) - sumNA), 1)
+  out[!is.na(x), ] <- 0 + rpois(n_layers * (length(x) - sumNA), 1)
   # out <- x * 0 + rpois(n_layers, 1)
   # out <- as.matrix(out, nrow = length(x))
   return(out)
@@ -226,7 +226,7 @@ fun1 <- function(x, n_layers = 1) {
 nlyr_out <- 100
 
 # set.seed(8863)
-# 
+#
 # r_poisson <- app(
 #   dem_mask_100m2,
 #   fun = function(i, ff, outlayers) ff(i, n_layers = outlayers),

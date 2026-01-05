@@ -80,13 +80,13 @@ names_fixed
 
 # for (i in 1:length(names_needfix)) {
 #   name_i <- names_needfix[i]
-#   
+#
 #   r_i <- terra::subset(r_cov, names_needfix[i])
-#   
+#
 #   names(r_i) <- names_fixed[i]
-#   
+#
 #   datatype(r_i)
-#   
+#
 #   writeRaster(
 #     r_i,
 #     filename = paste0(dir_out, names_fixed[i], ".tif"),
@@ -105,5 +105,11 @@ covariates_overview_old <- root %>%
 setdiff(names_cov, covariates_overview_old$name)
 
 setdiff(covariates_overview_old$name, names_cov)
+
+# Style for code
+
+library(styler)
+
+style_dir(getwd())
 
 ### END ###
