@@ -411,6 +411,106 @@ library(Rcpp)
 #     overwrite = TRUE
 #   )
 
+
+# # Update each running mosaic; these calls also delete the per-zip file they ingest
+# update_running_mosaic(
+#   zip_mosaic_path = file.path(
+#     dir_tiles_nmins,
+#     paste0("nmins_", sprintf("%03d", i), ".tif")
+#   ),
+#   national_path = nat_nmins_path,
+#   layer_name = "micro_nmins"
+# )
+# update_running_mosaic(
+#   zip_mosaic_path = file.path(
+#     dir_tiles_demmad,
+#     paste0("demmad_", sprintf("%03d", i), ".tif")
+#   ),
+#   national_path = nat_demmad_path,
+#   layer_name = "micro_demmad"
+# )
+# update_running_mosaic(
+#   zip_mosaic_path = file.path(
+#     dir_tiles_aspsd,
+#     paste0("aspsd_", sprintf("%03d", i), ".tif")
+#   ),
+#   national_path = nat_aspsd_path,
+#   layer_name = "micro_aspsd"
+# )
+# update_running_mosaic(
+#   zip_mosaic_path = file.path(
+#     dir_tiles_flowsd,
+#     paste0("flowsd_", sprintf("%03d", i), ".tif")
+#   ),
+#   national_path = nat_flowsd_path,
+#   layer_name = "micro_flowsd"
+# )
+# update_running_mosaic(
+#   zip_mosaic_path = file.path(
+#     dir_tiles_slopeaspsd,
+#     paste0("slopeaspsd_", sprintf("%03d", i), ".tif")
+#   ),
+#   national_path = nat_slopeaspsd_path,
+#   layer_name = "micro_slopeaspsd"
+# )
+# # Gabor products
+# update_running_mosaic(
+#   zip_mosaic_path = file.path(
+#     dir_tiles_valleyness,
+#     paste0("valleyness_", sprintf("%03d", i), ".tif")
+#   ),
+#   national_path = nat_valleyness_path,
+#   layer_name = "micro_valleyness"
+# )
+# update_running_mosaic(
+#   zip_mosaic_path = file.path(
+#     dir_tiles_ridginess,
+#     paste0("ridginess_", sprintf("%03d", i), ".tif")
+#   ),
+#   national_path = nat_ridginess_path,
+#   layer_name = "micro_ridginess"
+# )
+# update_running_mosaic(
+#   zip_mosaic_path = file.path(
+#     dir_tiles_ridge_noise,
+#     paste0("ridge_noise_", sprintf("%03d", i), ".tif")
+#   ),
+#   national_path = nat_ridge_noise_path,
+#   layer_name = "micro_ridge_noise"
+# )
+# update_running_mosaic(
+#   zip_mosaic_path = file.path(
+#     dir_tiles_ridge_slope_index,
+#     paste0("ridge_slope_index_", sprintf("%03d", i), ".tif")
+#   ),
+#   national_path = nat_ridge_slope_idx_path,
+#   layer_name = "micro_ridge_slope_index"
+# )
+# update_running_mosaic(
+#   zip_mosaic_path = file.path(
+#     dir_tiles_ridge_valley_index,
+#     paste0("ridge_valley_index_", sprintf("%03d", i), ".tif")
+#   ),
+#   national_path = nat_ridge_valley_idx_path,
+#   layer_name = "micro_ridge_valley_index"
+# )
+# update_running_mosaic(
+#   zip_mosaic_path = file.path(
+#     dir_tiles_saddles,
+#     paste0("saddles_", sprintf("%03d", i), ".tif")
+#   ),
+#   national_path = nat_saddles_path,
+#   layer_name = "micro_saddles"
+# )
+# update_running_mosaic(
+#   zip_mosaic_path = file.path(
+#     dir_tiles_edginess,
+#     paste0("edginess_", sprintf("%03d", i), ".tif")
+#   ),
+#   national_path = nat_edginess_path,
+#   layer_name = "micro_edginess"
+# )
+
 # Old stuff
 
 # Test Gabor filters

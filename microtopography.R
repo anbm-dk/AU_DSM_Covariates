@@ -247,7 +247,7 @@ for (i in 1:length(dem_zips)) {
 
   rasters <- list.files(
     tmpfolder,
-    pattern = ".tif",
+    pattern = "\\.tif$",
     full.names = TRUE
   )
 
@@ -554,153 +554,10 @@ for (i in 1:length(dem_zips)) {
   merge_tiles_to_zip(lapply(tile_files, `[[`, "edginess"), 
                      zip_edginess_path, "edginess")
 
-  # Optional: after merging, you can delete the tile-level files to keep temp small
-  # (Only do this if you're sure the merge succeeded.)
-  all_tile_paths <- unique(unlist(tile_files, use.names = FALSE))
-  unlink(all_tile_paths, force = TRUE)
-
-  gc()
-
-
-  # Update mosaic
-
-  # Example paths for the running national mosaics (unmasked; mask at the end)
-  nat_nmins_path <- file.path(
-    dir_microdem_merged, "micro_nmins_unmasked.tif"
-  )
-  nat_demmad_path <- file.path(
-    dir_microdem_merged, "micro_demmad_unmasked.tif"
-  )
-  nat_aspsd_path <- file.path(
-    dir_microdem_merged, "micro_aspsd_unmasked.tif"
-  )
-  nat_flowsd_path <- file.path(
-    dir_microdem_merged, "micro_flowsd_unmasked.tif"
-  )
-  nat_slopeaspsd_path <- file.path(
-    dir_microdem_merged, "micro_slopeaspsd_unmasked.tif"
-  )
-  nat_valleyness_path <- file.path(
-    dir_microdem_merged, "micro_valleyness_unmasked.tif"
-  )
-  nat_ridginess_path <- file.path(
-    dir_microdem_merged, "micro_ridginess_unmasked.tif"
-  )
-  nat_ridge_noise_path <- file.path(
-    dir_microdem_merged, "micro_ridge_noise_unmasked.tif"
-  )
-  nat_ridge_slope_idx_path <- file.path(
-    dir_microdem_merged, "micro_ridge_slope_index_unmasked.tif"
-  )
-  nat_ridge_valley_idx_path <- file.path(
-    dir_microdem_merged, "micro_ridge_valley_index_unmasked.tif"
-  )
-  nat_saddles_path <- file.path(
-    dir_microdem_merged, "micro_saddles_unmasked.tif"
-  )
-  nat_edginess_path <- file.path(
-    dir_microdem_merged, "micro_edginess_unmasked.tif"
-  )
-  
-
-  # Update each running mosaic; these calls also delete the per-zip file they ingest
-  update_running_mosaic(
-    zip_mosaic_path = file.path(
-      dir_tiles_nmins,
-      paste0("nmins_", sprintf("%03d", i), ".tif")
-    ),
-    national_path = nat_nmins_path,
-    layer_name = "micro_nmins"
-  )
-  update_running_mosaic(
-    zip_mosaic_path = file.path(
-      dir_tiles_demmad,
-      paste0("demmad_", sprintf("%03d", i), ".tif")
-    ),
-    national_path = nat_demmad_path,
-    layer_name = "micro_demmad"
-  )
-  update_running_mosaic(
-    zip_mosaic_path = file.path(
-      dir_tiles_aspsd,
-      paste0("aspsd_", sprintf("%03d", i), ".tif")
-    ),
-    national_path = nat_aspsd_path,
-    layer_name = "micro_aspsd"
-  )
-  update_running_mosaic(
-    zip_mosaic_path = file.path(
-      dir_tiles_flowsd,
-      paste0("flowsd_", sprintf("%03d", i), ".tif")
-    ),
-    national_path = nat_flowsd_path,
-    layer_name = "micro_flowsd"
-  )
-  update_running_mosaic(
-    zip_mosaic_path = file.path(
-      dir_tiles_slopeaspsd,
-      paste0("slopeaspsd_", sprintf("%03d", i), ".tif")
-    ),
-    national_path = nat_slopeaspsd_path,
-    layer_name = "micro_slopeaspsd"
-  )
-  # Gabor products
-  update_running_mosaic(
-    zip_mosaic_path = file.path(
-      dir_tiles_valleyness,
-      paste0("valleyness_", sprintf("%03d", i), ".tif")
-    ),
-    national_path = nat_valleyness_path,
-    layer_name = "micro_valleyness"
-  )
-  update_running_mosaic(
-    zip_mosaic_path = file.path(
-      dir_tiles_ridginess,
-      paste0("ridginess_", sprintf("%03d", i), ".tif")
-    ),
-    national_path = nat_ridginess_path,
-    layer_name = "micro_ridginess"
-  )
-  update_running_mosaic(
-    zip_mosaic_path = file.path(
-      dir_tiles_ridge_noise,
-      paste0("ridge_noise_", sprintf("%03d", i), ".tif")
-    ),
-    national_path = nat_ridge_noise_path,
-    layer_name = "micro_ridge_noise"
-  )
-  update_running_mosaic(
-    zip_mosaic_path = file.path(
-      dir_tiles_ridge_slope_index,
-      paste0("ridge_slope_index_", sprintf("%03d", i), ".tif")
-    ),
-    national_path = nat_ridge_slope_idx_path,
-    layer_name = "micro_ridge_slope_index"
-  )
-  update_running_mosaic(
-    zip_mosaic_path = file.path(
-      dir_tiles_ridge_valley_index,
-      paste0("ridge_valley_index_", sprintf("%03d", i), ".tif")
-    ),
-    national_path = nat_ridge_valley_idx_path,
-    layer_name = "micro_ridge_valley_index"
-  )
-  update_running_mosaic(
-    zip_mosaic_path = file.path(
-      dir_tiles_saddles,
-      paste0("saddles_", sprintf("%03d", i), ".tif")
-    ),
-    national_path = nat_saddles_path,
-    layer_name = "micro_saddles"
-  )
-  update_running_mosaic(
-    zip_mosaic_path = file.path(
-      dir_tiles_edginess,
-      paste0("edginess_", sprintf("%03d", i), ".tif")
-    ),
-    national_path = nat_edginess_path,
-    layer_name = "micro_edginess"
-  )
+  # # Optional: after merging, you can delete the tile-level files to keep temp small
+  # # (Only do this if you're sure the merge succeeded.)
+  # all_tile_paths <- unique(unlist(tile_files, use.names = FALSE))
+  # unlink(all_tile_paths, force = TRUE)
 
   saveRDS(i, file = paste0(dir_dat, "/microdem_loop_current_i.rds"))
   
@@ -709,55 +566,138 @@ for (i in 1:length(dem_zips)) {
 
 parallel::stopCluster(cl)
 
-# Mask and Write results to files
+# Update mosaic (too timeconsuming do this afterwards)
 
-dem <- terra::rast(file.path(dir_dat, "Sampling_Input", "dhm2015_terraen_10m.tif"))
+# Example paths for the running national mosaics (unmasked; mask at the end)
+nat_nmins_path <- file.path(
+  dir_microdem_merged, "micro_nmins_unmasked.tif"
+)
+nat_demmad_path <- file.path(
+  dir_microdem_merged, "micro_demmad_unmasked.tif"
+)
+nat_aspsd_path <- file.path(
+  dir_microdem_merged, "micro_aspsd_unmasked.tif"
+)
+nat_flowsd_path <- file.path(
+  dir_microdem_merged, "micro_flowsd_unmasked.tif"
+)
+nat_slopeaspsd_path <- file.path(
+  dir_microdem_merged, "micro_slopeaspsd_unmasked.tif"
+)
+nat_valleyness_path <- file.path(
+  dir_microdem_merged, "micro_valleyness_unmasked.tif"
+)
+nat_ridginess_path <- file.path(
+  dir_microdem_merged, "micro_ridginess_unmasked.tif"
+)
+nat_ridge_noise_path <- file.path(
+  dir_microdem_merged, "micro_ridge_noise_unmasked.tif"
+)
+nat_ridge_slope_idx_path <- file.path(
+  dir_microdem_merged, "micro_ridge_slope_index_unmasked.tif"
+)
+nat_ridge_valley_idx_path <- file.path(
+  dir_microdem_merged, "micro_ridge_valley_index_unmasked.tif"
+)
+nat_saddles_path <- file.path(
+  dir_microdem_merged, "micro_saddles_unmasked.tif"
+)
+nat_edginess_path <- file.path(
+  dir_microdem_merged, "micro_edginess_unmasked.tif"
+)
 
-mask_and_write <- function(unmasked_path, final_path, layer_name) {
-  r <- terra::rast(unmasked_path)
+# Merge tiles, aggregate to 10 m and mask
+
+dir_tiles_aspsd %>%
+  list.files(
+    pattern = "\\.tif$",
+    full.names = TRUE
+  ) %>%
+  sprc() %>%
+  merge() %>%
+  agg_5to10m(
+    fun_focal = "mean",
+    fun_agg = "mean",
+    decimals = 3
+  ) %>%
   terra::mask(
-    r, dem,
-    filename = final_path,
-    names = layer_name,
+    mask = dem,
+    filename = file.path(
+      dir_microdem_merged,
+      "micro_aspsd.tif"
+    ),
+    names = "micro_aspsd",
     overwrite = TRUE
   )
-}
 
-mask_and_write(
-  nat_nmins_path,
-  file.path(
-    dir_microdem_merged,
-    "micro_nmins.tif"
-  ),
-  "micro_nmins"
-)
+dir_tiles_nmins %>%
+  list.files(
+    pattern = "\\.tif$",
+    full.names = TRUE
+  ) %>%
+  sprc() %>%
+  merge() %>%
+  agg_5to10m(
+    fun_focal = "mean",
+    fun_agg = "sum",
+    decimals = 1
+  ) %>%
+  terra::mask(
+    mask = dem,
+    filename = file.path(
+      dir_microdem_merged,
+      "micro_nmins.tif"
+    ),
+    names = "micro_nmins",
+    overwrite = TRUE
+  )
 
-mask_and_write(
-  nat_demmad_path,
-  file.path(
-    dir_microdem_merged,
-    "micro_demmad.tif"
-  ),
-  "micro_demmad"
-)
+dir_tiles_demmad %>%
+  list.files(
+    pattern = "\\.tif$",
+    full.names = TRUE
+  ) %>%
+  sprc() %>%
+  merge() %>%
+  agg_5to10m(
+    fun_focal = "mean",
+    fun_agg = "median",
+    decimals = 3
+  ) %>%
+  terra::mask(
+    mask = dem,
+    filename = file.path(
+      dir_microdem_merged,
+      "micro_demmad.tif"
+    ),
+    names = "micro_demmad",
+    overwrite = TRUE
+  )
 
-mask_and_write(
-  nat_aspsd_path,
-  file.path(
-    dir_microdem_merged,
-    "micro_aspsd.tif"
-  ),
-  "micro_aspsd"
-)
+dir_tiles_flowsd %>%
+  list.files(
+    pattern = "\\.tif$",
+    full.names = TRUE
+  ) %>%
+  sprc() %>%
+  merge() %>%
+  agg_5to10m(
+    fun_focal = "mean",
+    fun_agg = "mean",
+    decimals = 4
+  ) %>%
+  terra::mask(
+    mask = dem,
+    filename = file.path(
+      dir_microdem_merged,
+      "micro_flowsd.tif"
+    ),
+    names = "micro_flowsd",
+    overwrite = TRUE
+  )
 
-mask_and_write(
-  nat_flowsd_path,
-  file.path(
-    dir_microdem_merged,
-    "micro_flowsd.tif"
-  ),
-  "micro_flowsd"
-)
+# Mask and Write results to files
+
 
 mask_and_write(
   nat_slopeaspsd_path,
