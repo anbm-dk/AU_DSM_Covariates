@@ -265,9 +265,7 @@ library(Rcpp)
 #   print(paste0("i = ", i, "; j = ", j))
 # }
 
-# dem <- dir_dat %>%
-#   paste0(., "/Sampling_Input/dhm2015_terraen_10m.tif") %>%
-#   rast()
+
 #
 # micro_nmins <- dir_tiles_nmins %>%
 #   list.files(".tif", full.names = TRUE) %>%
@@ -412,6 +410,46 @@ library(Rcpp)
 #   )
 
 
+# Update mosaic (too timeconsuming do this afterwards)
+
+# # Example paths for the running national mosaics (unmasked; mask at the end)
+# nat_nmins_path <- file.path(
+#   dir_microdem_merged, "micro_nmins_unmasked.tif"
+# )
+# nat_demmad_path <- file.path(
+#   dir_microdem_merged, "micro_demmad_unmasked.tif"
+# )
+# nat_aspsd_path <- file.path(
+#   dir_microdem_merged, "micro_aspsd_unmasked.tif"
+# )
+# nat_flowsd_path <- file.path(
+#   dir_microdem_merged, "micro_flowsd_unmasked.tif"
+# )
+# nat_slopeaspsd_path <- file.path(
+#   dir_microdem_merged, "micro_slopeaspsd_unmasked.tif"
+# )
+# nat_valleyness_path <- file.path(
+#   dir_microdem_merged, "micro_valleyness_unmasked.tif"
+# )
+# nat_ridginess_path <- file.path(
+#   dir_microdem_merged, "micro_ridginess_unmasked.tif"
+# )
+# nat_ridge_noise_path <- file.path(
+#   dir_microdem_merged, "micro_ridge_noise_unmasked.tif"
+# )
+# nat_ridge_slope_idx_path <- file.path(
+#   dir_microdem_merged, "micro_ridge_slope_index_unmasked.tif"
+# )
+# nat_ridge_valley_idx_path <- file.path(
+#   dir_microdem_merged, "micro_ridge_valley_index_unmasked.tif"
+# )
+# nat_saddles_path <- file.path(
+#   dir_microdem_merged, "micro_saddles_unmasked.tif"
+# )
+# nat_edginess_path <- file.path(
+#   dir_microdem_merged, "micro_edginess_unmasked.tif"
+# )
+
 # # Update each running mosaic; these calls also delete the per-zip file they ingest
 # update_running_mosaic(
 #   zip_mosaic_path = file.path(
@@ -514,7 +552,8 @@ library(Rcpp)
 # Old stuff
 
 # Test Gabor filters
-
+library(terra)
+library(magrittr)
 library(OpenImageR)
 
 init_gb <- GaborFeatureExtract$new()
@@ -643,6 +682,25 @@ log(prod(abs(rast(outrasters)))) %>% plot() # Also very interesting
 prod(abs(rast(outrasters))) %>%
   raise_to_power(1 / 8) %>%
   plot()
+
+saddles_abs_min <- min(
+  max(mingab, 0),
+  max(maxgab, 0)
+)
+saddles_abs_max <- max(
+  max(mingab, 0),
+  max(maxgab, 0)
+)
+
+saddles_abs_min %>% plot()
+
+saddles_adjusted <- saddles_abs_min * (saddles_abs_min/saddles_abs_max)
+
+saddles_adjusted %>% plot()
+
+plot(saddles_abs_min/saddles_abs_max)
+
+plot(1-((saddles_abs_max - saddles_abs_min)/saddles_abs_max))
 
 # More thorough test
 
@@ -1325,3 +1383,115 @@ plot((mean_gab - mingab) / (maxgab + mingab))
 # aggregate(r_focalized, fact = 25, fun = "sd", na.rm = TRUE) %>% plot()
 #
 # raw <- focalCpp(demtile, w=3, fun=localflowCpp, fillvalue=NA_real_)
+
+
+# # Mask and Write results to files
+# 
+# 
+# mask_and_write(
+#   nat_slopeaspsd_path,
+#   file.path(
+#     dir_microdem_merged,
+#     "micro_slopeaspsd.tif"
+#   ),
+#   "micro_slopeaspsd"
+# )
+# 
+# mask_and_write(
+#   nat_valleyness_path,
+#   file.path(
+#     dir_microdem_merged,
+#     "micro_valleyness.tif"
+#   ),
+#   "micro_valleyness"
+# )
+# 
+# mask_and_write(
+#   nat_ridginess_path,
+#   file.path(
+#     dir_microdem_merged,
+#     "micro_ridginess.tif"
+#   ),
+#   "micro_ridginess"
+# )
+# 
+# mask_and_write(
+#   nat_ridge_noise_path,
+#   file.path(
+#     dir_microdem_merged,
+#     "micro_ridge_noise.tif"
+#   ),
+#   "micro_ridge_noise"
+# )
+# 
+# mask_and_write(
+#   nat_ridge_slope_idx_path,
+#   file.path(
+#     dir_microdem_merged,
+#     "micro_ridge_slope_index.tif"
+#   ),
+#   "micro_ridge_slope_index"
+# )
+# 
+# mask_and_write(
+#   nat_ridge_valley_idx_path,
+#   file.path(
+#     dir_microdem_merged,
+#     "micro_ridge_valley_index.tif"
+#   ),
+#   "micro_ridge_valley_index"
+# )
+# 
+# mask_and_write(
+#   nat_saddles_path,
+#   file.path(
+#     dir_microdem_merged,
+#     "micro_saddles.tif"
+#   ),
+#   "micro_saddles"
+# )
+# 
+# mask_and_write(
+#   nat_edginess_path,
+#   file.path(
+#     dir_microdem_merged,
+#     "micro_edginess.tif"
+#   ),
+#   "micro_edginess"
+# )
+# 
+# # Inspect results from first loop
+# 
+# plot(demtile)
+# plot(mins)
+# plot(demmad)
+# plot(aspsd)
+# plot(flowsd)
+# 
+# # Plot tiles for second loop
+# 
+# # alltiles_dem <- rasters %>%
+# #   sprc() %>%
+# #   merge() %>%
+# #   aggregate(fact = 25, fun = "mean")
+# # plot(alltiles_dem)
+# plot(alltiles_nmins) # 1 decimal
+# plot(alltiles_demmad) # 3 decimals
+# plot(alltiles_aspsd) # 3 decimals
+# plot(alltiles_flowsd) # 2 decimals
+# plot(alltiles_slopeaspsd) # 3 decimals
+# 
+# # Plot merged results
+# 
+# plot(micro_nmins)
+# plot(micro_demmad)
+# plot(micro_aspsd)
+# plot(micro_flowsd)
+# plot(micro_flowsd)
+
+# Fake DEM for testing
+
+demtile0 <- rast(
+  matrix(runif(10000), nrow = 100),
+  extent = ext(c(0, 40, 0, 40))
+  )

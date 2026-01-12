@@ -1,16 +1,17 @@
 # Microtography
 
 # Notes
-# I am using 0.8 m resolution instead of the original 0.4 resolution, as the the
+# I am using 1.25 m resolution instead of the original 0.4 resolution, as the the
 # highest resolution seems to contain linear artifacts. Maybe related to
 # overlaps between flights?
-# Also, resampling the DEM to 0.8  m increases the speed of computation.
+# Also, resampling the DEM to 1.25  m increases the speed of computation.
 
 # I should first aggregate the intermediate results to 5 m resolution.
 # The merge the tiles, smooth the rasters and aggregate to 10 m.
 
 library(terra)
 library(magrittr)
+library(flowpackage)
 
 dir_code <- getwd()
 root <- dirname(dir_code)
@@ -233,7 +234,7 @@ dem_zips <- list.files(
 )
 
 for (i in 1:length(dem_zips)) {
-# for (i in 300:301) {
+# for (i in 14) {
   unlink(
     list.files(tmpfolder, full.names = TRUE),
     recursive = TRUE,
@@ -257,6 +258,7 @@ for (i in 1:length(dem_zips)) {
   process_tile <- function(j, rasters, mygaussmat, myfocalmat, gabor_kernels) {
     demtile0 <- terra::rast(rasters[j])
     r5 <- terra::rast(terra::ext(demtile0), resolution = 5)
+    r1p25 <- terra::rast(terra::ext(demtile0), resolution = 1.25)
 
     agg_5m <- function(x, fun_focal1, fun_focal2, fun_agg, decimals) {
       x %>%
@@ -264,8 +266,6 @@ for (i in 1:length(dem_zips)) {
         terra::aggregate(fact = 2, fun = fun_agg) %>%
         terra::focal(mygaussmat, fun = fun_focal2, na.rm = TRUE) %>%
         terra::aggregate(fact = 2, fun = fun_agg) %>%
-        terra::focal(mygaussmat, fun = fun_focal2, na.rm = TRUE) %>%
-        terra::resample(r5, "bilinear") %>%
         round(decimals)
     }
 
@@ -286,18 +286,34 @@ for (i in 1:length(dem_zips)) {
 
     demtile <- demtile0 %>%
       terra::focal(mygaussmat, fun = "mean", na.rm = TRUE) %>%
-      terra::aggregate(fact = 2, fun = "mean")
+      terra::aggregate(fact = 2, fun = "mean") %>%
+      terra::focal(mygaussmat, fun = "mean", na.rm = TRUE) %>%
+      terra::resample(r1p25, "bilinear")
 
     # Local depressions
     focalmin <- terra::focal(demtile, myfocalmat, fun = "min", na.rm = TRUE)
-    lessthanmin <- demtile < focalmin
-    mins <- lessthanmin %>%
+    focaln <- terra::focal(
+      demtile*0 + 1,
+      3,
+      fun = "sum",
+      na.rm = FALSE
+      )
+    lessthanmin <- (demtile < focalmin)*(1-is.na(focaln))
+    agg_n <- (!is.na(focaln)*1) %>%
       agg_5m(
         fun_focal1 = "mean",
         fun_focal2 = "mean",
         fun_agg = "sum",
-        decimals = 1
+        decimals = 3
       )
+    agg_mins <- lessthanmin %>%
+      agg_5m(
+        fun_focal1 = "mean",
+        fun_focal2 = "mean",
+        fun_agg = "sum",
+        decimals = 3
+      )
+    mins <- (agg_mins * (5^2/1.25^2)) / agg_n
 
     # Roughness
     focalmeans <- terra::focal(demtile, mygaussmat, fun = "mean", na.rm = TRUE)
@@ -321,7 +337,6 @@ for (i in 1:length(dem_zips)) {
       fillvalue = NA_real_
     )
 
-
     flowsd <- (tileflow^2) %>%
       agg_5m(
         fun_focal1 = "mean",
@@ -333,7 +348,8 @@ for (i in 1:length(dem_zips)) {
       round(2)
 
     # Slope-aspect SD
-    tileslope_sin <- terra::terrain(demtile, "slope", unit = "radians") %>%
+    tileslope <- terra::terrain(demtile, "slope", unit = "radians")
+    tileslope_sin <- tileslope %>%
       sin()
 
     tileasp <- terra::terrain(demtile, "aspect", unit = "radians")
@@ -381,57 +397,103 @@ for (i in 1:length(dem_zips)) {
     # SD across the 8 orientation responses
     sdgab <- terra::app(outras_stack, fun = sd)
 
-    # Smooth/aggregate helper used repeatedly in your gabor block
-    smooth_to_r5 <- function(x) {
-      x %>%
-        terra::focal(mygaussmat, fun = "mean", na.rm = TRUE) %>%
-        terra::aggregate(fact = 2, fun = "mean") %>%
-        terra::focal(mygaussmat, fun = "mean", na.rm = TRUE) %>%
-        terra::aggregate(fact = 2, fun = "mean") %>%
-        terra::focal(mygaussmat, fun = "mean", na.rm = TRUE) %>%
-        terra::resample(r5, "bilinear")
-    }
-
-    valleyness <- smooth_to_r5(maxgab)
-    ridginess <- smooth_to_r5(mingab)
+    valleyness <- maxgab %>%
+      agg_5m(
+        fun_focal1 = "mean",
+        fun_focal2 = "mean",
+        fun_agg = "mean",
+        decimals = 5
+      )
+    ridginess <- mingab %>%
+      agg_5m(
+        fun_focal1 = "mean",
+        fun_focal2 = "mean",
+        fun_agg = "mean",
+        decimals = 5
+      )
 
     ridge_noise <- outras_stack %>%
       abs() %>%
       mean() %>%
-      smooth_to_r5()
+      agg_5m(
+        fun_focal1 = "mean",
+        fun_focal2 = "mean",
+        fun_agg = "mean",
+        decimals = 5
+      )
 
     make_negative <- function(x) {
       out <- x * -1
       return(out)
     }
+    
+    # The multiplication and subtraction use arbitrary parameters
+    param_mult1 <- 2
+    param_add <- -2
+    param_mult2 <- 0.5
+    
+    mylogodds <- (
+      (
+        terra::clamp(log(sdgab), lower = -15) - 
+          terra::clamp(
+            log(tan(tileslope_smooth)), lower = -10
+          )*param_mult1 + param_add
+        )*param_mult2
+    ) %>%
+      terra::subst(from = NaN, to = 0) %>%
+      terra::subst(from = Inf, to = 10) %>%
+      terra::subst(from = -Inf, to = -10) 
 
-    ridge_slope_index <- (sdgab * log(tileslope_smooth)) %>%
-      terra::focal(mygaussmat, fun = "mean", na.rm = TRUE) %>%
-      terra::subst(from = -Inf, to = 0) %>%
-      terra::aggregate(fact = 2, fun = "mean") %>%
-      terra::focal(mygaussmat, fun = "mean", na.rm = TRUE) %>%
-      terra::aggregate(fact = 2, fun = "mean") %>%
-      terra::focal(mygaussmat, fun = "mean", na.rm = TRUE) %>%
-      terra::resample(r5, "bilinear") %>%
-      make_negative()
+    ridge_slope_index <- (exp(mylogodds)/(1 + exp(mylogodds))) %>%
+      mask(mask = tileslope) %>%
+      agg_5m(
+        fun_focal1 = "mean",
+        fun_focal2 = "mean",
+        fun_agg = "mean",
+        decimals = 2
+      )
 
     ridge_valley_index <- (maxgab / (maxgab + mingab)) %>%
       terra::subst(from = NaN, to = 0.5) %>%
       terra::subst(from = Inf, to = 0.5) %>%
       terra::subst(from = -Inf, to = 0.5) %>%
-      smooth_to_r5()
+      agg_5m(
+        fun_focal1 = "mean",
+        fun_focal2 = "mean",
+        fun_agg = "mean",
+        decimals = 3
+      )
     
-    saddles <- min(
-        max(mingab, 0),
-        max(maxgab, 0)
-      ) %>%
-      smooth_to_r5()
+    saddles_abs_min <- min(
+      max(mingab, 0),
+      max(maxgab, 0)
+    )
+    saddles_abs_max <- max(
+      max(mingab, 0),
+      max(maxgab, 0)
+    )
+  
+    saddles <- (1-((saddles_abs_max - saddles_abs_min)/saddles_abs_max)) %>%
+      terra::subst(from = NaN, to = 0.5) %>%
+      terra::subst(from = Inf, to = 0.5) %>%
+      terra::subst(from = -Inf, to = 0.5) %>%
+      agg_5m(
+        fun_focal1 = "mean",
+        fun_focal2 = "mean",
+        fun_agg = "mean",
+        decimals = 5
+      )
     
     edginess <- outras_stack %>%
       abs() %>%
       prod() %>%
       raise_to_power(1 / 8) %>%
-      smooth_to_r5()
+      agg_5m(
+        fun_focal1 = "mean",
+        fun_focal2 = "mean",
+        fun_agg = "mean",
+        decimals = 5
+      )
 
     out_paths <- list(
       mins = file.path(tmpfolder, sprintf("tile_%05d_mins.tif", j)),
@@ -566,47 +628,71 @@ for (i in 1:length(dem_zips)) {
 
 parallel::stopCluster(cl)
 
-# Update mosaic (too timeconsuming do this afterwards)
+# Load DEM
 
-# Example paths for the running national mosaics (unmasked; mask at the end)
-nat_nmins_path <- file.path(
-  dir_microdem_merged, "micro_nmins_unmasked.tif"
+mycrs <- "EPSG:25832"
+
+dir_cov <- dir_dat %>%
+  paste0(., "/covariates_10m/")
+
+cov_files <- dir_cov %>%
+  list.files(
+    pattern = "\\.tif$",
+    full.names = TRUE
+  )
+
+dem_ind <- grepl(
+  "dhm",
+  cov_files
 )
-nat_demmad_path <- file.path(
-  dir_microdem_merged, "micro_demmad_unmasked.tif"
-)
-nat_aspsd_path <- file.path(
-  dir_microdem_merged, "micro_aspsd_unmasked.tif"
-)
-nat_flowsd_path <- file.path(
-  dir_microdem_merged, "micro_flowsd_unmasked.tif"
-)
-nat_slopeaspsd_path <- file.path(
-  dir_microdem_merged, "micro_slopeaspsd_unmasked.tif"
-)
-nat_valleyness_path <- file.path(
-  dir_microdem_merged, "micro_valleyness_unmasked.tif"
-)
-nat_ridginess_path <- file.path(
-  dir_microdem_merged, "micro_ridginess_unmasked.tif"
-)
-nat_ridge_noise_path <- file.path(
-  dir_microdem_merged, "micro_ridge_noise_unmasked.tif"
-)
-nat_ridge_slope_idx_path <- file.path(
-  dir_microdem_merged, "micro_ridge_slope_index_unmasked.tif"
-)
-nat_ridge_valley_idx_path <- file.path(
-  dir_microdem_merged, "micro_ridge_valley_index_unmasked.tif"
-)
-nat_saddles_path <- file.path(
-  dir_microdem_merged, "micro_saddles_unmasked.tif"
-)
-nat_edginess_path <- file.path(
-  dir_microdem_merged, "micro_edginess_unmasked.tif"
-)
+
+dem <- cov_files[dem_ind] %>% rast()
+
+crs(dem) <- mycrs
+
 
 # Merge tiles, aggregate to 10 m and mask
+
+merge_agg_mask <- function(
+    tiledir,
+    fun_focal,
+    fun_agg,
+    decimals,
+    mask,
+    outname
+) {
+  tiledir %>%
+    list.files(
+      pattern = "\\.tif$",
+      full.names = TRUE
+    ) %>%
+    sprc() %>%
+    merge() %>%
+    agg_5to10m(
+      fun_focal = fun_focal,
+      fun_agg = fun_agg,
+      decimals = decimals
+    ) %>%
+    terra::mask(
+      mask = mask,
+      filename = file.path(
+        dir_microdem_merged,
+        paste0(outname, ".tif")
+      ),
+      names = outname,
+      overwrite = TRUE,
+      gdal = "TILED=YES"
+    )
+}
+
+merge_agg_mask(
+  tiledir   = dir_tiles_aspsd,
+  fun_focal = "mean",
+  fun_agg   = "mean",
+  decimals  = 3,
+  mask      = dem,
+  outname   = "micro_aspsd"
+)
 
 dir_tiles_aspsd %>%
   list.files(
@@ -627,8 +713,19 @@ dir_tiles_aspsd %>%
       "micro_aspsd.tif"
     ),
     names = "micro_aspsd",
-    overwrite = TRUE
+    overwrite = TRUE,
+    gdal = "TILED=YES"
   )
+
+merge_agg_mask(
+  tiledir   = dir_tiles_nmins,
+  fun_focal = "mean",
+  fun_agg   = "sum",
+  decimals  = 1,
+  mask      = dem,
+  outname   = "micro_nmins"
+)
+
 
 dir_tiles_nmins %>%
   list.files(
@@ -649,8 +746,18 @@ dir_tiles_nmins %>%
       "micro_nmins.tif"
     ),
     names = "micro_nmins",
-    overwrite = TRUE
+    overwrite = TRUE,
+    gdal = "TILED=YES"
   )
+
+merge_agg_mask(
+  tiledir   = dir_tiles_demmad,
+  fun_focal = "mean",
+  fun_agg   = "median",
+  decimals  = 3,
+  mask      = dem,
+  outname   = "micro_demmad"
+)
 
 dir_tiles_demmad %>%
   list.files(
@@ -671,8 +778,18 @@ dir_tiles_demmad %>%
       "micro_demmad.tif"
     ),
     names = "micro_demmad",
-    overwrite = TRUE
+    overwrite = TRUE,
+    gdal = "TILED=YES"
   )
+
+merge_agg_mask(
+  tiledir   = dir_tiles_flowsd,
+  fun_focal = "mean",
+  fun_agg   = "mean",
+  decimals  = 4,
+  mask      = dem,
+  outname   = "micro_flowsd"
+)
 
 dir_tiles_flowsd %>%
   list.files(
@@ -693,112 +810,81 @@ dir_tiles_flowsd %>%
       "micro_flowsd.tif"
     ),
     names = "micro_flowsd",
-    overwrite = TRUE
+    overwrite = TRUE,
+    gdal = "TILED=YES"
   )
 
-# Mask and Write results to files
-
-
-mask_and_write(
-  nat_slopeaspsd_path,
-  file.path(
-    dir_microdem_merged,
-    "micro_slopeaspsd.tif"
-  ),
-  "micro_slopeaspsd"
+merge_agg_mask(
+  tiledir   = dir_tiles_slopeaspsd,
+  fun_focal = "mean",
+  fun_agg   = "mean",
+  decimals  = 5,
+  mask      = dem,
+  outname   = "micro_slopeaspsd"
 )
 
-mask_and_write(
-  nat_valleyness_path,
-  file.path(
-    dir_microdem_merged,
-    "micro_valleyness.tif"
-  ),
-  "micro_valleyness"
+merge_agg_mask(
+  tiledir   = dir_tiles_valleyness,
+  fun_focal = "mean",
+  fun_agg   = "mean",
+  decimals  = 5,
+  mask      = dem,
+  outname   = "micro_valleyness"
 )
 
-mask_and_write(
-  nat_ridginess_path,
-  file.path(
-    dir_microdem_merged,
-    "micro_ridginess.tif"
-  ),
-  "micro_ridginess"
+merge_agg_mask(
+  tiledir   = dir_tiles_ridginess,
+  fun_focal = "mean",
+  fun_agg   = "mean",
+  decimals  = 5,
+  mask      = dem,
+  outname   = "micro_ridginess"
 )
 
-mask_and_write(
-  nat_ridge_noise_path,
-  file.path(
-    dir_microdem_merged,
-    "micro_ridge_noise.tif"
-  ),
-  "micro_ridge_noise"
+merge_agg_mask(
+  tiledir   = dir_tiles_ridge_noise,
+  fun_focal = "mean",
+  fun_agg   = "mean",
+  decimals  = 5,
+  mask      = dem,
+  outname   = "micro_ridge_noise"
 )
 
-mask_and_write(
-  nat_ridge_slope_idx_path,
-  file.path(
-    dir_microdem_merged,
-    "micro_ridge_slope_index.tif"
-  ),
-  "micro_ridge_slope_index"
+merge_agg_mask(
+  tiledir   = dir_tiles_ridge_slope_index,
+  fun_focal = "mean",
+  fun_agg   = "mean",
+  decimals  = 2,
+  mask      = dem,
+  outname   = "micro_ridge_slope_index"
 )
 
-mask_and_write(
-  nat_ridge_valley_idx_path,
-  file.path(
-    dir_microdem_merged,
-    "micro_ridge_valley_index.tif"
-  ),
-  "micro_ridge_valley_index"
+merge_agg_mask(
+  tiledir   = dir_tiles_ridge_valley_index,
+  fun_focal = "mean",
+  fun_agg   = "mean",
+  decimals  = 3,
+  mask      = dem,
+  outname   = "micro_ridge_valley_index"
 )
 
-mask_and_write(
-  nat_saddles_path,
-  file.path(
-    dir_microdem_merged,
-    "micro_saddles.tif"
-  ),
-  "micro_saddles"
+merge_agg_mask(
+  tiledir   = dir_tiles_saddles,
+  fun_focal = "mean",
+  fun_agg   = "mean",
+  decimals  = 5,
+  mask      = dem,
+  outname   = "micro_saddles"
 )
 
-mask_and_write(
-  nat_edginess_path,
-  file.path(
-    dir_microdem_merged,
-    "micro_edginess.tif"
-  ),
-  "micro_edginess"
+merge_agg_mask(
+  tiledir   = dir_tiles_edginess,
+  fun_focal = "mean",
+  fun_agg   = "mean",
+  decimals  = 5,
+  mask      = dem,
+  outname   = "micro_edginess"
 )
-
-# Inspect results from first loop
-
-plot(demtile)
-plot(mins)
-plot(demmad)
-plot(aspsd)
-plot(flowsd)
-
-# Plot tiles for second loop
-
-# alltiles_dem <- rasters %>%
-#   sprc() %>%
-#   merge() %>%
-#   aggregate(fact = 25, fun = "mean")
-# plot(alltiles_dem)
-plot(alltiles_nmins) # 1 decimal
-plot(alltiles_demmad) # 3 decimals
-plot(alltiles_aspsd) # 3 decimals
-plot(alltiles_flowsd) # 2 decimals
-plot(alltiles_slopeaspsd) # 3 decimals
-
-# Plot merged results
-
-plot(micro_nmins)
-plot(micro_demmad)
-plot(micro_aspsd)
-plot(micro_flowsd)
-plot(micro_flowsd)
 
 
 # END
