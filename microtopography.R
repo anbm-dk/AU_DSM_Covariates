@@ -206,7 +206,7 @@ library(future)
 library(future.apply)
 library(parallel)
 
-n_workers <- min(6, max(1, parallel::detectCores() - 1))
+n_workers <- min(10, max(1, parallel::detectCores() - 1))
 cl <- parallel::makeCluster(n_workers)
 on.exit(parallel::stopCluster(cl), add = TRUE)
 future::plan(future::cluster, workers = cl)
@@ -233,8 +233,15 @@ dem_zips <- list.files(
   full.names = TRUE
 )
 
+# Load index for latest cycle
+
+last_i <- readRDS(paste0(dir_dat, "/microdem_loop_current_i.rds"))
+
+# for (i in last_i:length(dem_zips)) {
 for (i in 1:length(dem_zips)) {
 # for (i in 14) {
+  # i <- 14
+  
   unlink(
     list.files(tmpfolder, full.names = TRUE),
     recursive = TRUE,
@@ -427,31 +434,36 @@ for (i in 1:length(dem_zips)) {
       return(out)
     }
     
-    # The multiplication and subtraction use arbitrary parameters
+    # The multiplication and subtraction use arbitrary parameters.
+    # The optimal parameters seem to be dependent on the resolution.
     param_mult1 <- 2
-    param_add <- -2
+    param_add <- 2
     param_mult2 <- 0.5
+    param_lower <- -10
+    
+    log_sdgab <- log(sdgab) %>%
+      terra::clamp(lower = param_lower)
+    log_tanslopesmooth <- tan(tileslope_smooth) %>%
+      log() %>%
+      magrittr::multiply_by(param_mult1) %>%
+      magrittr::add(param_add) %>%
+      terra::clamp(lower = param_lower)
     
     mylogodds <- (
       (
-        terra::clamp(log(sdgab), lower = -15) - 
-          terra::clamp(
-            log(tan(tileslope_smooth)), lower = -10
-          )*param_mult1 + param_add
-        )*param_mult2
+        log_sdgab - log_tanslopesmooth)*param_mult2
     ) %>%
       terra::subst(from = NaN, to = 0) %>%
-      terra::subst(from = Inf, to = 10) %>%
-      terra::subst(from = -Inf, to = -10) 
-
-    ridge_slope_index <- (exp(mylogodds)/(1 + exp(mylogodds))) %>%
       mask(mask = tileslope) %>%
       agg_5m(
         fun_focal1 = "mean",
         fun_focal2 = "mean",
         fun_agg = "mean",
-        decimals = 2
+        decimals = 4
       )
+
+    ridge_slope_index <- (exp(mylogodds)/(1 + exp(mylogodds))) %>%
+      round(digits = 3)
 
     ridge_valley_index <- (maxgab / (maxgab + mingab)) %>%
       terra::subst(from = NaN, to = 0.5) %>%
@@ -694,28 +706,11 @@ merge_agg_mask(
   outname   = "micro_aspsd"
 )
 
-dir_tiles_aspsd %>%
-  list.files(
-    pattern = "\\.tif$",
-    full.names = TRUE
-  ) %>%
-  sprc() %>%
-  merge() %>%
-  agg_5to10m(
-    fun_focal = "mean",
-    fun_agg = "mean",
-    decimals = 3
-  ) %>%
-  terra::mask(
-    mask = dem,
-    filename = file.path(
-      dir_microdem_merged,
-      "micro_aspsd.tif"
-    ),
-    names = "micro_aspsd",
-    overwrite = TRUE,
-    gdal = "TILED=YES"
-  )
+unlink(
+  list.files(tmpfolder, full.names = TRUE),
+  recursive = TRUE,
+  force = TRUE
+)
 
 merge_agg_mask(
   tiledir   = dir_tiles_nmins,
@@ -726,29 +721,12 @@ merge_agg_mask(
   outname   = "micro_nmins"
 )
 
+unlink(
+  list.files(tmpfolder, full.names = TRUE),
+  recursive = TRUE,
+  force = TRUE
+)
 
-dir_tiles_nmins %>%
-  list.files(
-    pattern = "\\.tif$",
-    full.names = TRUE
-  ) %>%
-  sprc() %>%
-  merge() %>%
-  agg_5to10m(
-    fun_focal = "mean",
-    fun_agg = "sum",
-    decimals = 1
-  ) %>%
-  terra::mask(
-    mask = dem,
-    filename = file.path(
-      dir_microdem_merged,
-      "micro_nmins.tif"
-    ),
-    names = "micro_nmins",
-    overwrite = TRUE,
-    gdal = "TILED=YES"
-  )
 
 merge_agg_mask(
   tiledir   = dir_tiles_demmad,
@@ -759,28 +737,11 @@ merge_agg_mask(
   outname   = "micro_demmad"
 )
 
-dir_tiles_demmad %>%
-  list.files(
-    pattern = "\\.tif$",
-    full.names = TRUE
-  ) %>%
-  sprc() %>%
-  merge() %>%
-  agg_5to10m(
-    fun_focal = "mean",
-    fun_agg = "median",
-    decimals = 3
-  ) %>%
-  terra::mask(
-    mask = dem,
-    filename = file.path(
-      dir_microdem_merged,
-      "micro_demmad.tif"
-    ),
-    names = "micro_demmad",
-    overwrite = TRUE,
-    gdal = "TILED=YES"
-  )
+unlink(
+  list.files(tmpfolder, full.names = TRUE),
+  recursive = TRUE,
+  force = TRUE
+)
 
 merge_agg_mask(
   tiledir   = dir_tiles_flowsd,
@@ -791,28 +752,11 @@ merge_agg_mask(
   outname   = "micro_flowsd"
 )
 
-dir_tiles_flowsd %>%
-  list.files(
-    pattern = "\\.tif$",
-    full.names = TRUE
-  ) %>%
-  sprc() %>%
-  merge() %>%
-  agg_5to10m(
-    fun_focal = "mean",
-    fun_agg = "mean",
-    decimals = 4
-  ) %>%
-  terra::mask(
-    mask = dem,
-    filename = file.path(
-      dir_microdem_merged,
-      "micro_flowsd.tif"
-    ),
-    names = "micro_flowsd",
-    overwrite = TRUE,
-    gdal = "TILED=YES"
-  )
+unlink(
+  list.files(tmpfolder, full.names = TRUE),
+  recursive = TRUE,
+  force = TRUE
+)
 
 merge_agg_mask(
   tiledir   = dir_tiles_slopeaspsd,
@@ -821,6 +765,12 @@ merge_agg_mask(
   decimals  = 5,
   mask      = dem,
   outname   = "micro_slopeaspsd"
+)
+
+unlink(
+  list.files(tmpfolder, full.names = TRUE),
+  recursive = TRUE,
+  force = TRUE
 )
 
 merge_agg_mask(
@@ -832,6 +782,12 @@ merge_agg_mask(
   outname   = "micro_valleyness"
 )
 
+unlink(
+  list.files(tmpfolder, full.names = TRUE),
+  recursive = TRUE,
+  force = TRUE
+)
+
 merge_agg_mask(
   tiledir   = dir_tiles_ridginess,
   fun_focal = "mean",
@@ -839,6 +795,12 @@ merge_agg_mask(
   decimals  = 5,
   mask      = dem,
   outname   = "micro_ridginess"
+)
+
+unlink(
+  list.files(tmpfolder, full.names = TRUE),
+  recursive = TRUE,
+  force = TRUE
 )
 
 merge_agg_mask(
@@ -850,6 +812,12 @@ merge_agg_mask(
   outname   = "micro_ridge_noise"
 )
 
+unlink(
+  list.files(tmpfolder, full.names = TRUE),
+  recursive = TRUE,
+  force = TRUE
+)
+
 merge_agg_mask(
   tiledir   = dir_tiles_ridge_slope_index,
   fun_focal = "mean",
@@ -857,6 +825,12 @@ merge_agg_mask(
   decimals  = 2,
   mask      = dem,
   outname   = "micro_ridge_slope_index"
+)
+
+unlink(
+  list.files(tmpfolder, full.names = TRUE),
+  recursive = TRUE,
+  force = TRUE
 )
 
 merge_agg_mask(
@@ -868,6 +842,12 @@ merge_agg_mask(
   outname   = "micro_ridge_valley_index"
 )
 
+unlink(
+  list.files(tmpfolder, full.names = TRUE),
+  recursive = TRUE,
+  force = TRUE
+)
+
 merge_agg_mask(
   tiledir   = dir_tiles_saddles,
   fun_focal = "mean",
@@ -875,6 +855,12 @@ merge_agg_mask(
   decimals  = 5,
   mask      = dem,
   outname   = "micro_saddles"
+)
+
+unlink(
+  list.files(tmpfolder, full.names = TRUE),
+  recursive = TRUE,
+  force = TRUE
 )
 
 merge_agg_mask(
