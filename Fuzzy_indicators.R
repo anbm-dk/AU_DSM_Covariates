@@ -195,8 +195,16 @@ fuzzify_indicators <- function(
   residual_layer = TRUE,
   local_filter = NULL,
   n_digits = 3,
-  outfolder = NULL
+  outfolder = NULL,
+  mask = NULL
 ) {
+  if (!is.null(mask)) {
+    x <- terra::cover(
+      x = x,
+      y = mask*0
+    )
+  }
+  
   x_sum <- sum(x)
 
   if (residual_layer) {
@@ -238,6 +246,13 @@ fuzzify_indicators <- function(
       w = local_filter,
       na.policy = "omit",
       na.rm = TRUE
+    )
+  }
+  
+  if (!is.null(mask)) {
+    x_fuzzy <- terra::mask(
+      x = x_fuzzy,
+      mask = mask
     )
   }
 
@@ -312,16 +327,27 @@ rename_crisp <- function(
 #   landscape_files,
 #   outfolder = tmpfolder
 #   )
-#
-# # Process landscape elements [ok]
-#
-# fuzzify_indicators(
-#   landscape_crisp,
-#   aggregation_factor = 5,
-#   local_filter = my_focal_weights,
-#   n_digits = 2,
-#   outfolder = tmpfolder
-# )
+
+# Process landscape elements [ok]
+
+landscape_crisp_folder <- dir_dat %>%
+  paste0(., "/landscape_crisp_delete/")
+
+landscape_crisp <- landscape_crisp_folder %>%
+  list.files(
+    pattern = "\\.tif$",
+    full.names = TRUE
+  ) %>%
+  rast()
+
+fuzzify_indicators(
+  landscape_crisp,
+  aggregation_factor = 5,
+  local_filter = my_focal_weights,
+  n_digits = 2,
+  outfolder = tmpfolder,
+  mask = dem
+)
 
 # # Rename georegions [ok]
 #
@@ -338,16 +364,27 @@ rename_crisp <- function(
 #   georeg_files,
 #   outfolder = tmpfolder
 #   )
-#
-# # Process georegions [ok]
-#
-# fuzzify_indicators(
-#   georeg_crisp,
-#   aggregation_factor = 5,
-#   local_filter = my_focal_weights,
-#   n_digits = 2,
-#   outfolder = tmpfolder
-# )
+
+# Process georegions [ok]
+
+georeg_crisp_folder <- dir_dat %>%
+  paste0(., "/georeg_crisp_delete/")
+
+georeg_crisp <- georeg_crisp_folder %>%
+  list.files(
+    pattern = "\\.tif$",
+    full.names = TRUE
+  ) %>%
+  rast()
+
+fuzzify_indicators(
+  georeg_crisp,
+  aggregation_factor = 5,
+  local_filter = my_focal_weights,
+  n_digits = 2,
+  outfolder = tmpfolder,
+  mask = dem
+)
 
 
 # Sigma experiment
