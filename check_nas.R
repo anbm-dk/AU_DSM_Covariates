@@ -30,17 +30,71 @@ cov_files <- dir_cov %>%
 
 cov <- rast(cov_files)
 
-cov_nas <- app(
-  cov,
-  function(x) {
-    if(is.na(sum(x, na.rm = TRUE))) {
-      out <- NA
-    } else {
-      out <- sum(is.na(x))
-    }
-    return(out)
-  },
-  filename = paste0(tmpfolder, "/cov_nas.tif")
+# cov_nas <- app(
+#   cov,
+#   function(x) {
+#     if(is.na(sum(x, na.rm = TRUE))) {
+#       out <- NA
+#     } else {
+#       out <- sum(is.na(x))
+#     }
+#     return(out)
+#   },
+#   filename = paste0(tmpfolder, "/cov_nas.tif")
+# )
+
+cov_nas <- rast(paste0(tmpfolder, "/cov_nas.tif"))
+
+# as.data.frame(cov_nas)
+
+
+# Some layer needs to be masked, as it covers the entire area. Which one?
+
+# Mask using the dem
+
+dem_ind <- grepl(
+  "dhm",
+  cov_files
 )
+
+dem <- cov_files[dem_ind] %>% rast()
+
+crs(dem) <- mycrs
+
+# cov_nas_masked <- terra::mask(
+#   cov_nas,
+#   mask = dem,
+#   filename = paste0(tmpfolder, "/cov_nas_masked.tif")
+# )
+
+cov_nas_masked <- rast(paste0(tmpfolder, "/cov_nas_masked.tif"))
+
+# hist(cov_nas_masked)
+
+# cov_nas_masked2 <- ifel(cov_nas_masked == 0, NA, cov_nas_masked)
+
+# cov_nas_masked2
+
+# writeRaster(
+#   cov_nas_masked2,
+#   filename = paste0(tmpfolder, "/cov_nas_masked2.tif")
+# )
+
+cov_nas_masked2 <- rast(paste0(tmpfolder, "/cov_nas_masked2.tif"))
+
+# hist(cov_nas_masked2)
+
+# as.data.frame(cov_nas_masked2)
+
+cov_masked <- mask(
+  cov,
+  cov_nas_masked2
+)
+
+cov_notna_summary <- terra::global(cov_masked, "notNA")
+
+cov_notna_summary
+
+saveRDS(cov_notna_summary, paste0(dir_dat, "cov_notna_summary.Rds"))
 
 # END
