@@ -57,6 +57,16 @@ crs(dem) <- mycrs
 source("Fill_raster_gaps.R")
 source("Focal_density.R")
 
+r1 <- rast(ncols = 180, nrows = 180, xmin = 0)
+
+myfilter_mref <- terra::focalMat(r1, c(9, 22), "Gauss") %>%
+  terra::rast() %>%
+  terra::aggregate(fact = 9, fun = "sum") %>%
+  terra::values() %>%
+  as.vector() %>%
+  matrix(ncol = 5) %>%
+  round(3)
+
 # List files
 
 files_soilsuite <- dir_soilsuite %>%
@@ -141,55 +151,67 @@ newnames_full <- names_full %>%
 #   tmpFiles(remove = TRUE)
 # }
 
-# # Process full extent files [ok]
-#
-# r_full <- files_full %>% rast()
-#
-# newfiles_full <- dir_out %>%
-#   paste0(., newnames_full, ".tif")
-#
-# for (i in 1:(nlyr(r_full) - 1)) {
-# # for (i in 12:(nlyr(r_full) - 1)) {
-#   r_filled_i <- r_full[[i]] %>%
-#     terra::clamp(
-#       lower = 0,
-#       upper = 10000,
-#       values = FALSE,
-#     ) %>%
-#     fill_gaps_gauss(
-#       nsteps = 3,
-#       weighted = TRUE
-#     )
-#
-#   r_resampled_i <- r_filled_i %>%
-#     terra::project(
-#       x = .,
-#       y = dem,
-#       method = "cubicspline",
-#       mask = TRUE,
-#       threads = 10
-#     ) %>%
-#     mask(
-#       mask = dem
-#     )
-#
-#   names(r_resampled_i) <- newnames_full[i]
-#   varnames(r_resampled_i) <- newnames_full[i]
-#
-#   r_resampled_i %>%
-#     terra::clamp(
-#       lower = 0,
-#       upper = 10000,
-#       values = TRUE,
-#       filename = newfiles_full[i],
-#       names = newnames_full[i],
-#       datatype = "INT2U",
-#       overwrite = TRUE,
-#       gdal = "TILED=YES"
-#     )
-#
-#   tmpFiles(remove = TRUE)
-# }
+# Process full extent files [ok]
+
+r_full <- files_full %>% rast()
+
+newfiles_full <- dir_out %>%
+  paste0(., newnames_full, ".tif")
+
+for (i in 12:(nlyr(r_full) - 1)) {
+  r_filled_i <- r_full[[i]] %>%
+    terra::clamp(
+      lower = 0,
+      upper = 10000,
+      values = FALSE,
+    ) %>%
+    fill_gaps_gauss(
+      nsteps = 5,
+      weighted = TRUE
+    )
+  
+  writeRaster(
+    r_filled_i,
+    filename = paste0(tmpfolder, "/r_filled_i.tif"),
+    datatype = "INT2U",
+    overwrite = TRUE,
+    gdal = "TILED=YES"
+  )
+
+  r_resampled_i <- r_filled_i %>%
+    terra::project(
+      x = .,
+      y = dem,
+      method = "near",
+      mask = TRUE,
+      threads = 10
+    ) %>%
+    terra::focal(
+      w = myfilter_mref, 
+      fun = mean, 
+      na.rm = TRUE
+    ) %>%
+    mask(
+      mask = dem
+    )
+
+  names(r_resampled_i) <- newnames_full[i]
+  varnames(r_resampled_i) <- newnames_full[i]
+
+  r_resampled_i %>%
+    terra::clamp(
+      lower = 0,
+      upper = 10000,
+      values = TRUE,
+      filename = newfiles_full[i],
+      names = newnames_full[i],
+      datatype = "INT2U",
+      overwrite = TRUE,
+      gdal = "TILED=YES"
+    )
+
+  tmpFiles(remove = TRUE)
+}
 
 # # Bare soil frequency [done]
 #

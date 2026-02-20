@@ -48,7 +48,13 @@ cov_nas <- rast(paste0(tmpfolder, "/cov_nas.tif"))
 # as.data.frame(cov_nas)
 
 
-# Some layer needs to be masked, as it covers the entire area. Which one?
+# Some layer needs to be masked, as it covers areas outside the dem. Which one?
+# A random sample doesn't give us much of a hint.
+
+# spatSample(cov, 100) %>%
+#   lapply(function(x) {sum(is.na(x))}) %>%
+#   unlist() %>%
+#   sort()
 
 # Mask using the dem
 
@@ -86,15 +92,28 @@ cov_nas_masked2 <- rast(paste0(tmpfolder, "/cov_nas_masked2.tif"))
 
 # as.data.frame(cov_nas_masked2)
 
-cov_masked <- mask(
-  cov,
-  cov_nas_masked2
-)
+# cov_masked <- mask(
+#   cov,
+#   cov_nas_masked2
+# )
+# 
+# cov_notna_summary <- terra::global(cov_masked, "notNA")
+# 
+# cov_notna_summary
+# 
+# saveRDS(cov_notna_summary, paste0(dir_dat, "cov_notna_summary.Rds"))
 
-cov_notna_summary <- terra::global(cov_masked, "notNA")
+# Inverse mask using dem, to find areas outside dem.
 
-cov_notna_summary
+# cov_nas_masked_inverse <- terra::mask(
+#     cov_nas,
+#     mask = dem,
+#     inverse = TRUE,
+#     filename = paste0(tmpfolder, "/cov_nas_masked_inverse.tif")
+#   )
+# 
+# spatSample(cov_nas_masked_inverse, 10)
 
-saveRDS(cov_notna_summary, paste0(dir_dat, "cov_notna_summary.Rds"))
+# Apparently, there are no nonNA values outside the dem.
 
 # END

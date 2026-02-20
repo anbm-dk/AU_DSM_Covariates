@@ -151,22 +151,24 @@ fill_gaps_gauss <- function(
 }
 
 # library(terra)
-#
+# 
 # f <- system.file("ex/elev.tif", package = "terra")
 # r <- rast(f)
 # plot(r)
-#
+# 
 # r[1200] <- 0
-#
-# plot(r)
-#
+# 
+# 
+# 
 # r_fill <- fill_gaps_gauss(r, 7, weighted = FALSE)
 # r_fill_w <- fill_gaps_gauss(r, 7, weighted = TRUE)
 # r_fill_w_list <- fill_gaps_gauss(r, 7, weighted = TRUE, include_list = TRUE)
-#
+# 
+# 
+# plot(r)
 # plot(r_fill)
 # plot(r_fill_w)
-#
+# 
 # plot(r_fill_w_list$aggregated_list[[3]])
 # plot(r_fill_w_list$smooth_up_list[[3]])
 # plot(r_fill_w_list$smooth_up_list[[1]])
