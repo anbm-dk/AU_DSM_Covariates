@@ -90,7 +90,7 @@ global(
 )
 
 chelsa_decimals <- c(
-  2, 1, 3, 
+  2, 1, 3,
   1, 2, 2,
   1, 2, 2,
   2, 2, 0,
@@ -100,9 +100,9 @@ chelsa_decimals <- c(
 )
 
 chelsa_extraname <- c(
-  "MAT", 	"MDTR", 	"ISOT", 	"TS", 	"TWARMM", 	"TCOLDM", "AMTR", 	"TWETQ", 	
-  "TDRYQ", 	"TWARMQ", 	"TCOLDQ", 	"AP", 	"PWETM", 	"PDRYM", 	"PS", 	"PWETQ", 	
-  "PDRYQ", 	"PWARMQ", 	"PCOLDQ"
+  "MAT", "MDTR", "ISOT", "TS", "TWARMM", "TCOLDM", "AMTR", "TWETQ",
+  "TDRYQ", "TWARMQ", "TCOLDQ", "AP", "PWETM", "PDRYM", "PS", "PWETQ",
+  "PDRYQ", "PWARMQ", "PCOLDQ"
 )
 
 chelsa_newnames <- paste0(
@@ -113,7 +113,6 @@ chelsa_newnames <- paste0(
 r_na <- rast(ncols = 180, nrows = 180, xmin = 0)
 mygaussmat <- focalMat(r_na, c(1, 1), "Gauss")
 mygaussmat2 <- focalMat(r_na, c(1, 2), "Gauss")
-
 
 
 # xy ratio of cells
@@ -153,7 +152,6 @@ for (i in 1:length(chelsa_newnames)) {
       gdal = "TILED=YES"
     )
 }
-
 
 
 # END

@@ -54,8 +54,8 @@ dem <- cov_files[dem_ind] %>% rast()
 
 crs(dem) <- mycrs
 
-source("Fill_raster_gaps.R")
-source("Focal_density.R")
+source("fill_raster_gaps.R")
+source("focal_density.R")
 
 r1 <- rast(ncols = 180, nrows = 180, xmin = 0)
 
@@ -169,7 +169,7 @@ for (i in 12:(nlyr(r_full) - 1)) {
       nsteps = 5,
       weighted = TRUE
     )
-  
+
   writeRaster(
     r_filled_i,
     filename = paste0(tmpfolder, "/r_filled_i.tif"),
@@ -187,8 +187,8 @@ for (i in 12:(nlyr(r_full) - 1)) {
       threads = 10
     ) %>%
     terra::focal(
-      w = myfilter_mref, 
-      fun = mean, 
+      w = myfilter_mref,
+      fun = mean,
       na.rm = TRUE
     ) %>%
     mask(

@@ -63,6 +63,12 @@ my_focal_weights <- focalMat(
   type = c("Gauss")
 )
 
+halfsigma <- focalMat(dem, d = c(5, 10), type = "Gauss")
+
+halfsigma
+
+source("fuzzify_indicators.R")
+
 # Process (ADK) wetlands layer [ok]
 
 # wetlands_crisp <- dir_input %>%
@@ -187,100 +193,6 @@ my_focal_weights <- focalMat(
 #   )
 # }
 
-# Function for remaining layers
-
-fuzzify_indicators <- function(
-  x = NULL,
-  aggregation_factor = 1,
-  residual_layer = TRUE,
-  local_filter = NULL,
-  n_digits = 3,
-  outfolder = NULL,
-  mask = NULL
-) {
-  if (!is.null(mask)) {
-    x <- terra::cover(
-      x = x,
-      y = mask*0
-    )
-  }
-  
-  x_sum <- sum(x)
-
-  if (residual_layer) {
-    x_res <- 1 - x_sum
-    names(x_res) <- "x_res"
-    x_crisp_full <- c(x, x_res)
-  } else {
-    x_crisp_full <- x
-  }
-
-  if (aggregation_factor > 1) {
-    x_crisp_full <- terra::aggregate(
-      x_crisp_full,
-      fact = aggregation_factor,
-      fun = "sum",
-      na.rm = TRUE # NB!
-    )
-
-    x_fuzzy <- focal(
-      x_crisp_full,
-      w = local_filter,
-      na.policy = "all",
-      na.rm = TRUE
-    )
-
-    x_fuzzy <- terra::resample(
-      x = x_fuzzy,
-      y = x,
-      method = "cubicspline"
-    )
-
-    x_fuzzy <- mask(
-      x_fuzzy,
-      mask = x[[1]]
-    )
-  } else {
-    x_fuzzy <- focal(
-      x_crisp_full,
-      w = local_filter,
-      na.policy = "omit",
-      na.rm = TRUE
-    )
-  }
-  
-  if (!is.null(mask)) {
-    x_fuzzy <- terra::mask(
-      x = x_fuzzy,
-      mask = mask
-    )
-  }
-
-  x_fuzzy_sum <- sum(x_fuzzy)
-  x_fuzzy_norm <- x_fuzzy / x_fuzzy_sum
-  x_fuzzy_norm_round <- signif(x_fuzzy_norm, digits = n_digits)
-  x_names <- names(x_fuzzy_norm_round)
-  # x_names_fuzzy <- paste0("fuzzy_", x_names)
-  x_names_fuzzy <- str_replace(
-    x_names,
-    pattern = "crisp",
-    replacement = "fuzzy"
-  )
-  x_files_fuzzy <- paste0(outfolder, x_names_fuzzy, ".tif")
-  names(x_fuzzy_norm_round) <- x_names_fuzzy
-
-  for (i in 1:nlyr(x_fuzzy_norm_round)) {
-    writeRaster(
-      x_fuzzy_norm_round[[i]],
-      filename = x_files_fuzzy[[i]],
-      datatype = "FLT4S",
-      overwrite = TRUE,
-      gdal = "TILED=YES"
-    )
-  }
-
-  invisible(NULL)
-}
 
 # Function to rename rasters with "crisp" and write new layers
 
@@ -330,24 +242,24 @@ rename_crisp <- function(
 
 # Process landscape elements [ok]
 
-landscape_crisp_folder <- dir_dat %>%
-  paste0(., "/landscape_crisp_delete/")
-
-landscape_crisp <- landscape_crisp_folder %>%
-  list.files(
-    pattern = "\\.tif$",
-    full.names = TRUE
-  ) %>%
-  rast()
-
-fuzzify_indicators(
-  landscape_crisp,
-  aggregation_factor = 5,
-  local_filter = my_focal_weights,
-  n_digits = 2,
-  outfolder = tmpfolder,
-  mask = dem
-)
+# landscape_crisp_folder <- dir_dat %>%
+#   paste0(., "/landscape_crisp_delete/")
+#
+# landscape_crisp <- landscape_crisp_folder %>%
+#   list.files(
+#     pattern = "\\.tif$",
+#     full.names = TRUE
+#   ) %>%
+#   rast()
+#
+# fuzzify_indicators(
+#   landscape_crisp,
+#   aggregation_factor = 5,
+#   local_filter = my_focal_weights,
+#   n_digits = 2,
+#   outfolder = tmpfolder,
+#   mask = dem
+# )
 
 # # Rename georegions [ok]
 #
@@ -367,58 +279,25 @@ fuzzify_indicators(
 
 # Process georegions [ok]
 
-georeg_crisp_folder <- dir_dat %>%
-  paste0(., "/georeg_crisp_delete/")
-
-georeg_crisp <- georeg_crisp_folder %>%
-  list.files(
-    pattern = "\\.tif$",
-    full.names = TRUE
-  ) %>%
-  rast()
-
-fuzzify_indicators(
-  georeg_crisp,
-  aggregation_factor = 5,
-  local_filter = my_focal_weights,
-  n_digits = 2,
-  outfolder = tmpfolder,
-  mask = dem
-)
-
-
-# Sigma experiment
-
-r1 <- matrix(
-  sample(c(0, 1), 400, replace = TRUE),
-  nrow = 20
-) %>%
-  rast()
-
-# plot(r1)
+# georeg_crisp_folder <- dir_dat %>%
+#   paste0(., "/georeg_crisp_delete/")
 #
-# r2 <- focal(r1, w = my_focal_weights, na.rm = TRUE)
+# georeg_crisp <- georeg_crisp_folder %>%
+#   list.files(
+#     pattern = "\\.tif$",
+#     full.names = TRUE
+#   ) %>%
+#   rast()
 #
-# plot(r2)
+# fuzzify_indicators(
+#   georeg_crisp,
+#   aggregation_factor = 5,
+#   local_filter = my_focal_weights,
+#   n_digits = 2,
+#   outfolder = tmpfolder,
+#   mask = dem
+# )
 
-# halfsigma <- focalMat(r1, d = c(0.56, 2), type = 'Gauss')
-
-halfsigma <- focalMat(r1, d = c(0.5, 1), type = "Gauss")
-
-halfsigma
-
-# r3 <- focal(r1, w = halfsigma, na.rm = TRUE)
-#
-# library(viridis)
-#
-# plot(r1, col = cividis(100))
-# plot(r3, col = cividis(100))
-#
-# hist(r3, breaks = 100)
-#
-# plot(r3 - r1)
-#
-# r3 - r1
 
 # Rename LU [ok]
 

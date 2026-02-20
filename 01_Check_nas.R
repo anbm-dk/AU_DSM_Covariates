@@ -96,11 +96,11 @@ cov_nas_masked2 <- rast(paste0(tmpfolder, "/cov_nas_masked2.tif"))
 #   cov,
 #   cov_nas_masked2
 # )
-# 
+#
 # cov_notna_summary <- terra::global(cov_masked, "notNA")
-# 
+#
 # cov_notna_summary
-# 
+#
 # saveRDS(cov_notna_summary, paste0(dir_dat, "cov_notna_summary.Rds"))
 
 # Inverse mask using dem, to find areas outside dem.
@@ -111,7 +111,7 @@ cov_nas_masked2 <- rast(paste0(tmpfolder, "/cov_nas_masked2.tif"))
 #     inverse = TRUE,
 #     filename = paste0(tmpfolder, "/cov_nas_masked_inverse.tif")
 #   )
-# 
+#
 # spatSample(cov_nas_masked_inverse, 10)
 
 # Apparently, there are no nonNA values outside the dem.

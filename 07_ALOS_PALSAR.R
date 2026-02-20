@@ -81,11 +81,11 @@ for (i in 1:nlyr(r_alos)) {
 
 # Old code
 # # HH
-# 
+#
 # r_hh <- files_alos %>%
 #   str_subset(pattern = "HH", negate = FALSE) %>%
 #   rast()
-# 
+#
 # hh_mean <- mean(r_hh, na.rm = TRUE) %>%
 #   resample(y = dem) %>%
 #   mask(
@@ -96,7 +96,7 @@ for (i in 1:nlyr(r_alos)) {
 #     overwrite = TRUE,
 #     gdal = "TILED=YES"
 #   )
-# 
+#
 # hh_sd <- stdev(r_hh, na.rm = TRUE) %>%
 #   resample(y = dem) %>%
 #   mask(
@@ -107,13 +107,13 @@ for (i in 1:nlyr(r_alos)) {
 #     overwrite = TRUE,
 #     gdal = "TILED=YES"
 #   )
-# 
+#
 # # HV
-# 
+#
 # r_hv <- files_alos %>%
 #   str_subset(pattern = "HV", negate = FALSE) %>%
 #   rast()
-# 
+#
 # hv_mean <- mean(r_hv, na.rm = TRUE) %>%
 #   resample(y = dem) %>%
 #   mask(
@@ -124,7 +124,7 @@ for (i in 1:nlyr(r_alos)) {
 #     overwrite = TRUE,
 #     gdal = "TILED=YES"
 #   )
-# 
+#
 # hv_sd <- stdev(r_hv, na.rm = TRUE) %>%
 #   resample(y = dem) %>%
 #   mask(

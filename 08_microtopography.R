@@ -239,9 +239,9 @@ last_i <- readRDS(paste0(dir_dat, "/microdem_loop_current_i.rds"))
 
 # for (i in last_i:length(dem_zips)) {
 for (i in 1:length(dem_zips)) {
-# for (i in 14) {
+  # for (i in 14) {
   # i <- 14
-  
+
   unlink(
     list.files(tmpfolder, full.names = TRUE),
     recursive = TRUE,
@@ -300,13 +300,13 @@ for (i in 1:length(dem_zips)) {
     # Local depressions
     focalmin <- terra::focal(demtile, myfocalmat, fun = "min", na.rm = TRUE)
     focaln <- terra::focal(
-      demtile*0 + 1,
+      demtile * 0 + 1,
       3,
       fun = "sum",
       na.rm = FALSE
-      )
-    lessthanmin <- (demtile < focalmin)*(1-is.na(focaln))
-    agg_n <- (!is.na(focaln)*1) %>%
+    )
+    lessthanmin <- (demtile < focalmin) * (1 - is.na(focaln))
+    agg_n <- (!is.na(focaln) * 1) %>%
       agg_5m(
         fun_focal1 = "mean",
         fun_focal2 = "mean",
@@ -320,7 +320,7 @@ for (i in 1:length(dem_zips)) {
         fun_agg = "sum",
         decimals = 3
       )
-    mins <- (agg_mins * (5^2/1.25^2)) / agg_n
+    mins <- (agg_mins * (5^2 / 1.25^2)) / agg_n
 
     # Roughness
     focalmeans <- terra::focal(demtile, mygaussmat, fun = "mean", na.rm = TRUE)
@@ -433,14 +433,14 @@ for (i in 1:length(dem_zips)) {
       out <- x * -1
       return(out)
     }
-    
+
     # The multiplication and subtraction use arbitrary parameters.
     # The optimal parameters seem to be dependent on the resolution.
     param_mult1 <- 2
     param_add <- 2
     param_mult2 <- 0.5
     param_lower <- -10
-    
+
     log_sdgab <- log(sdgab) %>%
       terra::clamp(lower = param_lower)
     log_tanslopesmooth <- tan(tileslope_smooth) %>%
@@ -448,10 +448,10 @@ for (i in 1:length(dem_zips)) {
       magrittr::multiply_by(param_mult1) %>%
       magrittr::add(param_add) %>%
       terra::clamp(lower = param_lower)
-    
+
     mylogodds <- (
       (
-        log_sdgab - log_tanslopesmooth)*param_mult2
+        log_sdgab - log_tanslopesmooth) * param_mult2
     ) %>%
       terra::subst(from = NaN, to = 0) %>%
       mask(mask = tileslope) %>%
@@ -462,7 +462,7 @@ for (i in 1:length(dem_zips)) {
         decimals = 4
       )
 
-    ridge_slope_index <- (exp(mylogodds)/(1 + exp(mylogodds))) %>%
+    ridge_slope_index <- (exp(mylogodds) / (1 + exp(mylogodds))) %>%
       round(digits = 3)
 
     ridge_valley_index <- (maxgab / (maxgab + mingab)) %>%
@@ -475,7 +475,7 @@ for (i in 1:length(dem_zips)) {
         fun_agg = "mean",
         decimals = 3
       )
-    
+
     saddles_abs_min <- min(
       max(mingab, 0),
       max(maxgab, 0)
@@ -484,8 +484,8 @@ for (i in 1:length(dem_zips)) {
       max(mingab, 0),
       max(maxgab, 0)
     )
-  
-    saddles <- (1-((saddles_abs_max - saddles_abs_min)/saddles_abs_max)) %>%
+
+    saddles <- (1 - ((saddles_abs_max - saddles_abs_min) / saddles_abs_max)) %>%
       terra::subst(from = NaN, to = 0.5) %>%
       terra::subst(from = Inf, to = 0.5) %>%
       terra::subst(from = -Inf, to = 0.5) %>%
@@ -495,7 +495,7 @@ for (i in 1:length(dem_zips)) {
         fun_agg = "mean",
         decimals = 5
       )
-    
+
     edginess <- outras_stack %>%
       abs() %>%
       prod() %>%
@@ -574,59 +574,95 @@ for (i in 1:length(dem_zips)) {
 
   # Build output filenames (one per product per zip)
   zip_nmins_path <- file.path(
-    dir_tiles_nmins, paste0("nmins_", sprintf("%03d", i), ".tif"))
+    dir_tiles_nmins, paste0("nmins_", sprintf("%03d", i), ".tif")
+  )
   zip_demmad_path <- file.path(
-    dir_tiles_demmad, paste0("demmad_", sprintf("%03d", i), ".tif"))
+    dir_tiles_demmad, paste0("demmad_", sprintf("%03d", i), ".tif")
+  )
   zip_aspsd_path <- file.path(
-    dir_tiles_aspsd, paste0("aspsd_", sprintf("%03d", i), ".tif"))
+    dir_tiles_aspsd, paste0("aspsd_", sprintf("%03d", i), ".tif")
+  )
   zip_flowsd_path <- file.path(
-    dir_tiles_flowsd, paste0("flowsd_", sprintf("%03d", i), ".tif"))
+    dir_tiles_flowsd, paste0("flowsd_", sprintf("%03d", i), ".tif")
+  )
   zip_slopeaspsd_path <- file.path(
-    dir_tiles_slopeaspsd, paste0("slopeaspsd_", sprintf("%03d", i), ".tif"))
+    dir_tiles_slopeaspsd, paste0("slopeaspsd_", sprintf("%03d", i), ".tif")
+  )
   zip_valleyness_path <- file.path(
-    dir_tiles_valleyness, paste0("valleyness_", sprintf("%03d", i), ".tif"))
+    dir_tiles_valleyness, paste0("valleyness_", sprintf("%03d", i), ".tif")
+  )
   zip_ridginess_path <- file.path(
-    dir_tiles_ridginess, paste0("ridginess_", sprintf("%03d", i), ".tif"))
+    dir_tiles_ridginess, paste0("ridginess_", sprintf("%03d", i), ".tif")
+  )
   zip_ridge_noise_path <- file.path(
-    dir_tiles_ridge_noise, paste0("ridge_noise_", sprintf("%03d", i), ".tif"))
+    dir_tiles_ridge_noise, paste0("ridge_noise_", sprintf("%03d", i), ".tif")
+  )
   zip_ridge_slope_idx_path <- file.path(
     dir_tiles_ridge_slope_index,
-    paste0("ridge_slope_index_", sprintf("%03d", i), ".tif"))
+    paste0("ridge_slope_index_", sprintf("%03d", i), ".tif")
+  )
   zip_ridge_valley_idx_path <- file.path(
-    dir_tiles_ridge_valley_index, 
-    paste0("ridge_valley_index_", sprintf("%03d", i), ".tif"))
+    dir_tiles_ridge_valley_index,
+    paste0("ridge_valley_index_", sprintf("%03d", i), ".tif")
+  )
   zip_saddles_path <- file.path(
-    dir_tiles_saddles, 
-    paste0("saddles_", sprintf("%03d", i), ".tif"))
+    dir_tiles_saddles,
+    paste0("saddles_", sprintf("%03d", i), ".tif")
+  )
   zip_edginess_path <- file.path(
-    dir_tiles_edginess, 
-    paste0("edginess_", sprintf("%03d", i), ".tif"))
+    dir_tiles_edginess,
+    paste0("edginess_", sprintf("%03d", i), ".tif")
+  )
 
   # Merge each product across tiles for this zip
-  merge_tiles_to_zip(lapply(tile_files, `[[`, "mins"), 
-                     zip_nmins_path, "nmins")
-  merge_tiles_to_zip(lapply(tile_files, `[[`, "demmad"), 
-                     zip_demmad_path, "demmad")
-  merge_tiles_to_zip(lapply(tile_files, `[[`, "aspsd"), 
-                     zip_aspsd_path, "aspsd")
-  merge_tiles_to_zip(lapply(tile_files, `[[`, "flowsd"), 
-                     zip_flowsd_path, "flowsd")
-  merge_tiles_to_zip(lapply(tile_files, `[[`, "slopeaspsd"), 
-                     zip_slopeaspsd_path, "slopeaspsd")
-  merge_tiles_to_zip(lapply(tile_files, `[[`, "valleyness"), 
-                     zip_valleyness_path, "valleyness")
-  merge_tiles_to_zip(lapply(tile_files, `[[`, "ridginess"), 
-                     zip_ridginess_path, "ridginess")
-  merge_tiles_to_zip(lapply(tile_files, `[[`, "ridge_noise"), 
-                     zip_ridge_noise_path, "ridge_noise")
-  merge_tiles_to_zip(lapply(tile_files, `[[`, "ridge_slope_index"), 
-                     zip_ridge_slope_idx_path, "ridge_slope_index")
-  merge_tiles_to_zip(lapply(tile_files, `[[`, "ridge_valley_index"), 
-                     zip_ridge_valley_idx_path, "ridge_valley_index")
-  merge_tiles_to_zip(lapply(tile_files, `[[`, "saddles"), 
-                     zip_saddles_path, "saddles")
-  merge_tiles_to_zip(lapply(tile_files, `[[`, "edginess"), 
-                     zip_edginess_path, "edginess")
+  merge_tiles_to_zip(
+    lapply(tile_files, `[[`, "mins"),
+    zip_nmins_path, "nmins"
+  )
+  merge_tiles_to_zip(
+    lapply(tile_files, `[[`, "demmad"),
+    zip_demmad_path, "demmad"
+  )
+  merge_tiles_to_zip(
+    lapply(tile_files, `[[`, "aspsd"),
+    zip_aspsd_path, "aspsd"
+  )
+  merge_tiles_to_zip(
+    lapply(tile_files, `[[`, "flowsd"),
+    zip_flowsd_path, "flowsd"
+  )
+  merge_tiles_to_zip(
+    lapply(tile_files, `[[`, "slopeaspsd"),
+    zip_slopeaspsd_path, "slopeaspsd"
+  )
+  merge_tiles_to_zip(
+    lapply(tile_files, `[[`, "valleyness"),
+    zip_valleyness_path, "valleyness"
+  )
+  merge_tiles_to_zip(
+    lapply(tile_files, `[[`, "ridginess"),
+    zip_ridginess_path, "ridginess"
+  )
+  merge_tiles_to_zip(
+    lapply(tile_files, `[[`, "ridge_noise"),
+    zip_ridge_noise_path, "ridge_noise"
+  )
+  merge_tiles_to_zip(
+    lapply(tile_files, `[[`, "ridge_slope_index"),
+    zip_ridge_slope_idx_path, "ridge_slope_index"
+  )
+  merge_tiles_to_zip(
+    lapply(tile_files, `[[`, "ridge_valley_index"),
+    zip_ridge_valley_idx_path, "ridge_valley_index"
+  )
+  merge_tiles_to_zip(
+    lapply(tile_files, `[[`, "saddles"),
+    zip_saddles_path, "saddles"
+  )
+  merge_tiles_to_zip(
+    lapply(tile_files, `[[`, "edginess"),
+    zip_edginess_path, "edginess"
+  )
 
   # # Optional: after merging, you can delete the tile-level files to keep temp small
   # # (Only do this if you're sure the merge succeeded.)
@@ -634,7 +670,7 @@ for (i in 1:length(dem_zips)) {
   # unlink(all_tile_paths, force = TRUE)
 
   saveRDS(i, file = paste0(dir_dat, "/microdem_loop_current_i.rds"))
-  
+
   gc()
 }
 
@@ -666,12 +702,12 @@ crs(dem) <- mycrs
 # Merge tiles, aggregate to 10 m and mask
 
 merge_agg_mask <- function(
-    tiledir,
-    fun_focal,
-    fun_agg,
-    decimals,
-    mask,
-    outname
+  tiledir,
+  fun_focal,
+  fun_agg,
+  decimals,
+  mask,
+  outname
 ) {
   tiledir %>%
     list.files(
