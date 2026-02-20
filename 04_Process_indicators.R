@@ -68,6 +68,7 @@ halfsigma <- focalMat(dem, d = c(5, 10), type = "Gauss")
 halfsigma
 
 source("fuzzify_indicators.R")
+source("rename_crisp.R")
 
 # Process (ADK) wetlands layer [ok]
 
@@ -174,7 +175,6 @@ source("fuzzify_indicators.R")
 #   na.rm = TRUE
 # )
 #
-#
 # geology_fuzzy_sum <- sum(geology_fuzzy)
 # geology_fuzzy_norm <- geology_fuzzy / geology_fuzzy_sum
 # geology_fuzzy_norm_round <- round(geology_fuzzy_norm, digits = 2)
@@ -194,38 +194,8 @@ source("fuzzify_indicators.R")
 # }
 
 
-# Function to rename rasters with "crisp" and write new layers
-
-rename_crisp <- function(
-  filenames,
-  outfolder = NULL
-) {
-  x <- filenames %>% rast()
-
-  x_names_crisp <- filenames %>%
-    basename() %>%
-    file_path_sans_ext() %>%
-    paste0("crisp_", .)
-
-  new_files <- paste0(outfolder, x_names_crisp, ".tif")
-
-  for (i in 1:nlyr(x)) {
-    writeRaster(
-      x[[i]],
-      filename = new_files[i],
-      names = x_names_crisp[i],
-      datatype = "INT2U",
-      overwrite = TRUE,
-      gdal = "TILED=YES"
-    )
-  }
-  out <- new_files %>% rast()
-
-  return(out)
-}
-
 # # Rename landscape elements [ok]
-#
+
 # landscape_ind <- grepl(
 #   "landscape",
 #   cov_files
@@ -262,7 +232,7 @@ rename_crisp <- function(
 # )
 
 # # Rename georegions [ok]
-#
+
 # georeg_ind <- grepl(
 #   "georeg_",
 #   cov_files
@@ -317,19 +287,28 @@ rename_crisp <- function(
 
 # Process LU [ok]
 
-# lu_ind <- grepl(
-#   "lu_",
-#   cov_files
-# )
-#
-# lu_crisp <- cov_files[lu_ind] %>% rast()
-#
-# fuzzify_indicators(
-#   lu_crisp,
-#   local_filter = halfsigma,
-#   n_digits = 2,
-#   outfolder = tmpfolder
-# )
+dir_lu_crisp <- dir_dat %>%
+  paste0(., "/lu_crisp/") %T>%
+  dir.create()
+
+# Add files manually
+
+dir_lu_fuzzy <- dir_dat %>%
+  paste0(., "/lu_fuzzy/") %T>%
+  dir.create()
+
+files_lu_crisp <- dir_lu_crisp %>%
+  list.files(full.names = TRUE)
+
+lu_crisp <- files_lu_crisp %>% rast()
+
+fuzzify_indicators(
+  lu_crisp,
+  local_filter = halfsigma,
+  n_digits = 2,
+  outfolder = tmpfolder,
+  mask = dem
+)
 
 # # Rename IMK [ok]
 #
@@ -384,10 +363,9 @@ rename_crisp <- function(
 # }
 
 # Rename_nature types from basemap and write new rasters [ok]
-# Clip crisp and fuzzy rasters afterwards using dem extent
 
-dir_nature <- dir_dat %>%
-  paste0(., "/BasemapForMapping/")
+# dir_nature <- dir_dat %>%
+#   paste0(., "/BasemapForMapping/")
 
 dir_nature_crisp <- dir_dat %>%
   paste0(., "/basemap_crisp/") %T>%
@@ -397,40 +375,40 @@ dir_nature_fuzzy <- dir_dat %>%
   paste0(., "/basemap_fuzzy/") %T>%
   dir.create()
 
-dir_nature_masked <- dir_dat %>%
-  paste0(., "/basemap_both_masked/") %T>%
-  dir.create()
-
-nature_names_original <- dir_nature %>%
-  list.files(
-    pattern = "\\.tif$",
-    full.names = TRUE
-  )
-
-nature_newnames_crisp <- nature_names_original %>%
-  str_replace_all(" ", "_") %>%
-  basename() %>%
-  file_path_sans_ext() %>%
-  tolower() %>%
-  paste0("crisp_basemap_", .)
-
-nature_newnames_fuzzy <- nature_names_original %>%
-  str_replace_all(" ", "_") %>%
-  basename() %>%
-  file_path_sans_ext() %>%
-  tolower() %>%
-  paste0("fuzzy_basemap_", .)
-
-nature_newfiles_crisp1 <- nature_newnames_crisp %>%
-  paste0(dir_nature_crisp, ., ".tif")
+# dir_nature_masked <- dir_dat %>%
+#   paste0(., "/basemap_both_masked/") %T>%
+#   dir.create()
+# 
+# nature_names_original <- dir_nature %>%
+#   list.files(
+#     pattern = "\\.tif$",
+#     full.names = TRUE
+#   )
+# 
+# nature_newnames_crisp <- nature_names_original %>%
+#   str_replace_all(" ", "_") %>%
+#   basename() %>%
+#   file_path_sans_ext() %>%
+#   tolower() %>%
+#   paste0("crisp_basemap_", .)
+# 
+# nature_newnames_fuzzy <- nature_names_original %>%
+#   str_replace_all(" ", "_") %>%
+#   basename() %>%
+#   file_path_sans_ext() %>%
+#   tolower() %>%
+#   paste0("fuzzy_basemap_", .)
+# 
+# nature_newfiles_crisp1 <- nature_newnames_crisp %>%
+#   paste0(dir_nature_crisp, ., ".tif")
 
 # Load crisp files, rename, rewrite [ok]
 
-nature_crisp <- nature_names_original %>%
-  rast()
-
-names(nature_crisp) <- nature_newnames_crisp
-varnames(nature_crisp) <- nature_newnames_crisp
+# nature_crisp <- nature_names_original %>%
+#   rast()
+# 
+# names(nature_crisp) <- nature_newnames_crisp
+# varnames(nature_crisp) <- nature_newnames_crisp
 
 # for (i in 1:nlyr(nature_crisp)) {
 #     writeRaster(
@@ -451,72 +429,42 @@ nature_crisp1 <- dir_nature_crisp %>%
   ) %>%
   rast()
 
-# fuzzify_indicators(
-#   nature_crisp1,
-#   local_filter = halfsigma,
-#   n_digits = 2,
-#   outfolder = dir_nature_fuzzy
-# )
+fuzzify_indicators(
+  nature_crisp1,
+  local_filter = halfsigma,
+  n_digits = 2,
+  outfolder = dir_nature_fuzzy,
+  mask = dem
+)
 
 # Mask crisp layers [ok]
 
-for (i in 1:nlyr(nature_crisp1)) {
-  outname_i <- nature_newfiles_crisp1[i] %>%
-    basename() %>%
-    file_path_sans_ext()
+# for (i in 1:nlyr(nature_crisp1)) {
+#   outname_i <- nature_newfiles_crisp1[i] %>%
+#     basename() %>%
+#     file_path_sans_ext()
+# 
+#   masked_i <- terra::mask(
+#     nature_crisp1[[i]],
+#     mask = dem
+#   )
+# 
+#   names(masked_i) <- outname_i
+#   varnames(masked_i) <- outname_i
+# 
+#   writeRaster(
+#     masked_i,
+#     filename = paste0(
+#       dir_nature_masked, outname_i, ".tif"
+#     ),
+#     datatype = "INT2U",
+#     overwrite = TRUE,
+#     gdal = "TILED=YES"
+#   )
+# 
+#   tmpFiles(remove = TRUE)
+# }
 
-  masked_i <- terra::mask(
-    nature_crisp1[[i]],
-    mask = dem
-  )
 
-  names(masked_i) <- outname_i
-  varnames(masked_i) <- outname_i
-
-  writeRaster(
-    masked_i,
-    filename = paste0(
-      dir_nature_masked, outname_i, ".tif"
-    ),
-    datatype = "INT2U",
-    overwrite = TRUE,
-    gdal = "TILED=YES"
-  )
-
-  tmpFiles(remove = TRUE)
-}
-
-# Mask fuzzy layers
-
-nature_fuzzy <- dir_nature_fuzzy %>%
-  list.files(
-    pattern = "\\.tif$",
-    full.names = TRUE
-  ) %>%
-  rast()
-# %>%
-#   subset(-nlyr(.))
-
-for (i in 1:nlyr(nature_fuzzy)) {
-  outname_i <- nature_newnames_fuzzy[i]
-
-  masked_i <- terra::mask(
-    nature_fuzzy[[i]],
-    mask = dem
-  )
-
-  names(masked_i) <- outname_i
-  varnames(masked_i) <- outname_i
-
-  writeRaster(
-    masked_i,
-    filename = paste0(
-      dir_nature_masked, outname_i, ".tif"
-    ),
-    datatype = "FLT4S",
-    overwrite = TRUE,
-    gdal = "TILED=YES"
-  )
-}
 
 # END
