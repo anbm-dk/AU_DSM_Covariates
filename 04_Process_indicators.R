@@ -306,7 +306,7 @@ fuzzify_indicators(
   lu_crisp,
   local_filter = halfsigma,
   n_digits = 2,
-  outfolder = tmpfolder,
+  outfolder = dir_lu_fuzzy,
   mask = dem
 )
 
