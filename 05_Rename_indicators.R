@@ -322,8 +322,6 @@ dir_out <- dir_dat %>%
 
 dem_zero <- dem*0
 
-i <- 1
-
 for (i in 1:length(crisp_files_all)) {
   name_i <- basename(crisp_files_all[i]) %>%
     file_path_sans_ext()
