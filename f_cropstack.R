@@ -20,15 +20,15 @@ cropstack <- function(
       base::make.names(.)
     outfile <- outname_base %>%
       base::paste0(folder, "/", ., ".tif")
-    crop_r <- terra::crop(x = r, y = y, mask = mask)
-    names(crop_r) <- outname_base
-    crop_r %>%
-      terra::writeRaster(
-        .,
-        datatype = dtype,
-        filename = outfile,
-        overwrite = TRUE
-      )
+    terra::crop(
+      x = r, 
+      y = y, 
+      mask = mask,
+      names = outname_base,
+      datatype = dtype,
+      filename = outfile,
+      overwrite = TRUE
+    )
   }
 }
 
