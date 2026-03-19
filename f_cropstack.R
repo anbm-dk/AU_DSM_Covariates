@@ -21,8 +21,8 @@ cropstack <- function(
     outfile <- outname_base %>%
       base::paste0(folder, "/", ., ".tif")
     terra::crop(
-      x = r, 
-      y = y, 
+      x = r,
+      y = y,
       mask = mask,
       names = outname_base,
       datatype = dtype,

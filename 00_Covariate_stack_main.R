@@ -99,7 +99,7 @@ names_fixed
 # Add new covariates to overview table
 
 covariates_overview_old <- root %>%
-  paste0(., "/cov_categories_20240304.csv") %>%
+  paste0(., "/covariates_overview_20251218.csv") %>%
   read.table(header = TRUE, sep = ";")
 
 setdiff(names_cov, covariates_overview_old$name)

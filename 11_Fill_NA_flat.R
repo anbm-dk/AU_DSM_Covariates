@@ -43,10 +43,10 @@ crs(dem) <- mycrs
 # Specify covariates
 
 fill_with_zero <- c(
-  "mid_slope_position", "normalized_height", "standardized_height", 	
-  "micro_aspsd", 	"micro_demmad", 	"micro_edginess", 	"micro_flowsd", 	
-  "micro_nmins", 	"micro_ridge_noise", 	"micro_ridginess", 	"micro_saddles", 
-  "micro_slopeaspsd", 	"micro_valleyness", 	"soilsuite_baresoilfrequency" 
+  "mid_slope_position", "normalized_height", "standardized_height",
+  "micro_aspsd", "micro_demmad", "micro_edginess", "micro_flowsd",
+  "micro_nmins", "micro_ridge_noise", "micro_ridginess", "micro_saddles",
+  "micro_slopeaspsd", "micro_valleyness", "soilsuite_baresoilfrequency"
 )
 
 fill_with_half <- c(
@@ -63,7 +63,7 @@ cov_fillhalf <- dir_cov %>%
 for (i in 1:length(fill_with_half)) {
   ifel(
     test = is.na(cov_fillhalf[[i]]),
-    yes = dem*0 + 0.5,
+    yes = dem * 0 + 0.5,
     no = cov_fillhalf[[i]],
     filename = paste0(
       dir_out, fill_with_half[i], ".tif"
@@ -84,7 +84,7 @@ cov_fillzero <- dir_cov %>%
 for (i in 1:length(fill_with_zero)) {
   ifel(
     test = is.na(cov_fillzero[[i]]),
-    yes = dem*0,
+    yes = dem * 0,
     no = cov_fillzero[[i]],
     filename = paste0(
       dir_out, fill_with_zero[i], ".tif"

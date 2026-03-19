@@ -113,7 +113,6 @@ lu_ind <- grepl(
 fuzzy_lu_files <- cov_files[lu_ind]
 
 
-
 # Functions for renaming
 
 get_indicator_name <- function(files) {
@@ -122,7 +121,7 @@ get_indicator_name <- function(files) {
     file_path_sans_ext() %>%
     strsplit("_") %>%
     do.call(rbind, .) %>%
-    magrittr::extract(1 , 1:2) %>%
+    magrittr::extract(1, 1:2) %>%
     as.vector() %>%
     paste(collapse = "_")
   return(out)
@@ -140,31 +139,31 @@ get_indicator_numbers <- function(files) {
 }
 
 rename_indicator_files <- function(
-    files,
-    codes,
-    numwidth
+  files,
+  codes,
+  numwidth
 ) {
   dir_files <- files %>%
     dirname() %>%
     magrittr::extract(1) %>%
     paste0(., "/")
-  
+
   catname <- files %>%
     get_indicator_name()
-  
+
   file_numbers <- files %>%
     get_indicator_numbers()
-  
+
   names_sorted <- codes$name[rank(file_numbers)]
-  
+
   numbers_pad <- file_numbers %>%
     str_pad(width = numwidth, pad = "0")
-  
+
   newfiles <- paste0(
-    dir_files, catname, "_", numbers_pad, "_", names_sorted, 
+    dir_files, catname, "_", numbers_pad, "_", names_sorted,
     ".tif"
   )
-  
+
   return(newfiles)
 }
 
@@ -320,16 +319,16 @@ crisp_files_all <- dir_crisp %>%
 dir_out <- dir_dat %>%
   paste0(., "new_covariates/")
 
-dem_zero <- dem*0
+dem_zero <- dem * 0
 
 for (i in 1:length(crisp_files_all)) {
   name_i <- basename(crisp_files_all[i]) %>%
     file_path_sans_ext()
-  
+
   rast_i <- rast(crisp_files_all[i])
-  
+
   dtyp_i <- datatype(rast_i)
-  
+
   rast_i %>%
     terra::cover(y = dem_zero) %>%
     terra::mask(

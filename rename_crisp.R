@@ -1,18 +1,18 @@
 # Function to rename crisp indicator layers
 
 rename_crisp <- function(
-    filenames,
-    outfolder = NULL
+  filenames,
+  outfolder = NULL
 ) {
   x <- filenames %>% rast()
-  
+
   x_names_crisp <- filenames %>%
     basename() %>%
     file_path_sans_ext() %>%
     paste0("crisp_", .)
-  
+
   new_files <- paste0(outfolder, x_names_crisp, ".tif")
-  
+
   for (i in 1:nlyr(x)) {
     writeRaster(
       x[[i]],
@@ -24,7 +24,7 @@ rename_crisp <- function(
     )
   }
   out <- new_files %>% rast()
-  
+
   return(out)
 }
 

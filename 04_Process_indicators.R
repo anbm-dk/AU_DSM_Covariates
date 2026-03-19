@@ -378,27 +378,27 @@ dir_nature_fuzzy <- dir_dat %>%
 # dir_nature_masked <- dir_dat %>%
 #   paste0(., "/basemap_both_masked/") %T>%
 #   dir.create()
-# 
+#
 # nature_names_original <- dir_nature %>%
 #   list.files(
 #     pattern = "\\.tif$",
 #     full.names = TRUE
 #   )
-# 
+#
 # nature_newnames_crisp <- nature_names_original %>%
 #   str_replace_all(" ", "_") %>%
 #   basename() %>%
 #   file_path_sans_ext() %>%
 #   tolower() %>%
 #   paste0("crisp_basemap_", .)
-# 
+#
 # nature_newnames_fuzzy <- nature_names_original %>%
 #   str_replace_all(" ", "_") %>%
 #   basename() %>%
 #   file_path_sans_ext() %>%
 #   tolower() %>%
 #   paste0("fuzzy_basemap_", .)
-# 
+#
 # nature_newfiles_crisp1 <- nature_newnames_crisp %>%
 #   paste0(dir_nature_crisp, ., ".tif")
 
@@ -406,7 +406,7 @@ dir_nature_fuzzy <- dir_dat %>%
 
 # nature_crisp <- nature_names_original %>%
 #   rast()
-# 
+#
 # names(nature_crisp) <- nature_newnames_crisp
 # varnames(nature_crisp) <- nature_newnames_crisp
 
@@ -443,15 +443,15 @@ fuzzify_indicators(
 #   outname_i <- nature_newfiles_crisp1[i] %>%
 #     basename() %>%
 #     file_path_sans_ext()
-# 
+#
 #   masked_i <- terra::mask(
 #     nature_crisp1[[i]],
 #     mask = dem
 #   )
-# 
+#
 #   names(masked_i) <- outname_i
 #   varnames(masked_i) <- outname_i
-# 
+#
 #   writeRaster(
 #     masked_i,
 #     filename = paste0(
@@ -461,10 +461,9 @@ fuzzify_indicators(
 #     overwrite = TRUE,
 #     gdal = "TILED=YES"
 #   )
-# 
+#
 #   tmpFiles(remove = TRUE)
 # }
-
 
 
 # END

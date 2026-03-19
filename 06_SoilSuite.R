@@ -77,23 +77,23 @@ myfilter_mref <- terra::focalMat(r1, c(9, 22), "Gauss") %>%
 #   str_subset(pattern = "confidence", negate = TRUE) %>%
 #   str_subset(pattern = "mask", negate = TRUE) %>%
 #   str_subset(pattern = "count", negate = TRUE)
-# 
+#
 # files_bare <- files_soilsuite %>%
 #   str_subset(pattern = "baresoil", negate = FALSE) %>%
 #   str_subset(pattern = "frequency", negate = TRUE)
-# 
+#
 # names_bare <- basename(files_bare) %>%
 #   file_path_sans_ext()
-# 
+#
 # newnames_bare <- names_bare %>%
 #   str_subset(pattern = "baresoil", negate = FALSE) %>%
 #   paste0("soilsuite_", .)
-# 
+#
 # files_full <- setdiff(files_soilsuite, files_bare)
-# 
+#
 # names_full <- basename(files_full) %>%
 #   file_path_sans_ext()
-# 
+#
 # newnames_full <- names_full %>%
 #   str_subset(pattern = "baresoil", negate = TRUE) %>%
 #   paste0("soilsuite_MREF_", .) %>%
@@ -154,10 +154,10 @@ myfilter_mref <- terra::focalMat(r1, c(9, 22), "Gauss") %>%
 # Process full extent files [ok]
 
 # r_full <- files_full %>% rast()
-# 
+#
 # newfiles_full <- dir_out %>%
 #   paste0(., newnames_full, ".tif")
-# 
+#
 # for (i in 12:(nlyr(r_full) - 1)) {
 #   r_filled_i <- r_full[[i]] %>%
 #     terra::clamp(
@@ -169,7 +169,7 @@ myfilter_mref <- terra::focalMat(r1, c(9, 22), "Gauss") %>%
 #       nsteps = 5,
 #       weighted = TRUE
 #     )
-# 
+#
 #   writeRaster(
 #     r_filled_i,
 #     filename = paste0(tmpfolder, "/r_filled_i.tif"),
@@ -177,7 +177,7 @@ myfilter_mref <- terra::focalMat(r1, c(9, 22), "Gauss") %>%
 #     overwrite = TRUE,
 #     gdal = "TILED=YES"
 #   )
-# 
+#
 #   r_resampled_i <- r_filled_i %>%
 #     terra::project(
 #       x = .,
@@ -194,10 +194,10 @@ myfilter_mref <- terra::focalMat(r1, c(9, 22), "Gauss") %>%
 #     mask(
 #       mask = dem
 #     )
-# 
+#
 #   names(r_resampled_i) <- newnames_full[i]
 #   varnames(r_resampled_i) <- newnames_full[i]
-# 
+#
 #   r_resampled_i %>%
 #     terra::clamp(
 #       lower = 0,
@@ -209,7 +209,7 @@ myfilter_mref <- terra::focalMat(r1, c(9, 22), "Gauss") %>%
 #       overwrite = TRUE,
 #       gdal = "TILED=YES"
 #     )
-# 
+#
 #   tmpFiles(remove = TRUE)
 # }
 
@@ -298,26 +298,26 @@ files_cov_soilsuite_old
 
 files_cov_soilsuite_new <- files_cov_soilsuite_old %>%
   str_replace(
-    "baresoil", 
+    "baresoil",
     "_baresoil_"
-    ) %>%
+  ) %>%
   str_replace(
-    "std", 
+    "std",
     "_std"
   ) %>%
   str_replace(
-    "average", 
+    "average",
     "_average"
   ) %>%
   str_replace(
-    "__", 
+    "__",
     "_"
   ) %>%
   str_replace(
-    "_.tif", 
+    "_.tif",
     ".tif"
   )
-  
+
 cbind(
   basename(files_cov_soilsuite_old),
   basename(files_cov_soilsuite_new)

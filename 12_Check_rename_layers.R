@@ -61,17 +61,17 @@ cbind(cov_filesnames_base_sans_ext, cov_layernames)[ind_change, ]
 
 for (i in 1:length(ind_change)) {
   ind_i <- ind_change[i]
-  
+
   rast_i <- rast(cov_files[ind_i])
-  
+
   dtyp_i <- datatype(rast_i)
-  
+
   filename_new_i <- paste0(
     dir_out,
     cov_filesnames_base_sans_ext[ind_i],
     ".tif"
   )
-  
+
   writeRaster(
     rast_i,
     filename = filename_new_i,
@@ -108,25 +108,26 @@ names_removed_diff <- removed_filesnames_base_sans_ext != cov_removed_layernames
 ind_change_removed <- c(1:length(cov_removed_layernames))[names_removed_diff]
 
 cbind(
-  removed_filesnames_base_sans_ext, 
-  cov_removed_layernames)[ind_change_removed, ]
+  removed_filesnames_base_sans_ext,
+  cov_removed_layernames
+)[ind_change_removed, ]
 
 
 # Rewrite removed rasters with new layer names
 
 for (i in 1:length(ind_change_removed)) {
   ind_i <- ind_change_removed[i]
-  
+
   rast_i <- rast(cov_removed_files[ind_i])
-  
+
   dtyp_i <- datatype(rast_i)
-  
+
   filename_new_i <- paste0(
     dir_out,
     removed_filesnames_base_sans_ext[ind_i],
     ".tif"
   )
-  
+
   writeRaster(
     rast_i,
     filename = filename_new_i,
