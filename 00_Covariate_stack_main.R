@@ -112,4 +112,13 @@ library(styler)
 
 style_dir(getwd())
 
+# Get datatypes of all layers
+
+datatype(r_cov) %>%
+  as.data.frame()
+
+# Mean values
+
+global(r_cov)
+
 ### END ###

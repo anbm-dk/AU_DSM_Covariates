@@ -1,1 +1,280 @@
-# AU_DSM_Covariates
+# Introduction
+
+This repository contains code used for processing covariates used for
+Digital Soil Mapping in Denmark, at the Department of Agroecology,
+Aarhus University. The repository was maintained until March 2026, after
+which development continued in another repository. The code herein
+therefore mainly serves as documentation for the covariate layers at the
+time of writing.
+
+The repository is organized into R scripts which comprise general
+processing steps for all covariates, or the processing steps used for
+specific data sources. A few scripts contain R functions used in the
+other scripts.
+
+The main page (which you are currently reading) contains a brief
+overview of the purposes and methods of each script
+
+# Structure
+
+## 00\_Covariate\_stack\_main.R
+
+General overview to keep track of the planned steps in developing the
+covariate stack. The script also contains code to check the names of the
+layers and rewrite them if they do not match the file names. Lastly, the
+script contains code to compare the layer names to previous versions and
+apply a style guide to the code.
+
+## 01\_Check\_nas.R
+
+The purpose of this script is to check for NA values within the covarage
+of the DEM, across all layers. It also contains code to check for non-NA
+values outside the DEM.
+
+## 02\_Make\_tiles.R
+
+Code from several experiments to develop tiles for the covariate stack.
+The script also contains the code used for producing the present set of
+591 tiles, used for dividing the layers.
+
+## 03\_Covariates\_tiles\_split.R
+
+This script contains a parallel workflow for dividing the covariate
+layers into tiles.
+
+## 04\_Process\_indicators.R
+
+This script contains code for processing the indicator layers produced
+for categorical covariates (the indicator layers were created prior to
+this repository). The code also includes the processing steps for a few
+numeric covariates based on polygon layers (“imk” - farmer’s crop
+registrations).
+
+The most important step in this context is the creation of fuzzy
+boundaries in the indicator layers to reflect the uncertainty associated
+with the spatial scale of the covariates and better account for edge
+effects at the boundaries between classes.
+
+## 05\_Rename\_indicators.R
+
+This script contains code to create more informative and standardized
+names for the indicator layers. The new names contain information on the
+classes shown in the layers as well as padded numbers to improve file
+sorting.
+
+## 06\_SoilSuite.R
+
+This script contains code for processing the satellite products from
+[SoilSuite](https://doi.org/10.15489/qkud8cudg596). The processing steps
+include a procedure to fill gaps in the products, which is especially
+relevant for the bare soil products, as well as reprojection and
+masking, based on the DEM.
+
+The gap filling procedure uses repeated steps of gaussian smoothing and
+aggregation by a factor of 2. This creates progressively smoother values
+for increasingly large gaps. The script also creates a multi-resolution
+density layer for the bare soil mask.
+
+The full-year spectral composites (“MREF”) were reprocessed in 2026 to
+remove missing values from the layers. However, a recent change in the
+reprojection function was found to produce elongated pixel artifacts in
+the output layers. An odd-sized spatial smoothing filter was therefore
+applied to eliminate these artifacts in the new processing workflow.
+
+## 07\_ALOS\_PALSAR.R
+
+This script contains the code used for processing L-band radar
+ALOS/PALSAR layers downloaded from Google Earth Engine. The original
+layers are annual composites, and the output layers summarize the values
+across multiple years, based on the mean and standard deviation. The
+code also contains steps to resample and mask the output layers.
+
+## 08\_microtopography.R
+
+This script contains the code for calculating and summarizing
+microtopographic variables. The original DEM at 40 cm resolution is
+stored as 1x1 km tiles within zip files containing up to 100 tiles for a
+10x10 km area. The procedure unpacks the compressed files one at a time
+and uses a parallel workflow to process the tiles within them.
+
+The parallel workflow resamples each tile to 1.25 m resolution to
+eliminate LiDAR artifacts. It then calculates 12 different
+microtopographic variables and summarizes the results at 5 m resolution.
+The output tiles are merged into one layer for each variable and further
+summarized at 10 m resolution. Each aggregation step also applies a
+smoothing filter to eliminate pixel artifacts and avoid abrupt changes
+at the boundaries between the tiles.
+
+## 09\_Chelsa.R
+
+This script contains code for processing 19 bioclimatic variables from
+[CHELSA-BIOCLIM+](https://www.doi.org/10.16904/envidat.332). The main
+steps include reprojection, masking and rounding of the layers. The
+original layers use longitude/latitude coordinates, and their pixels
+therefore have uneven spatial dimensions within Denmark. The code
+therefore uses smoothing with an odd-sized spatial filter to remove
+artifacts from the original pixels. The code also expands the names of
+the layers to include an abbreviation for each variable.
+
+## 10\_Fix\_30m\_cov\_ext.R
+
+This script serves to fix a mismatch in the extents of the layers in the
+old covariate stack, which had a resolution of 30.4 meters. The old
+covariate stack is a legacy dataset, which is no longer in use.
+
+## 11\_Fill\_NA\_flat.R
+
+This script fills gaps in some of the covariates with flat values
+(either 0 or 0.5, depending on the layer).
+
+## 12\_Check\_rename\_layers.R
+
+This script contains code for checking the layers names and rewriting
+the files if necessary. It is effectively a duplicate of the code in
+`00_Covariate_stack_main.R`, but it also processes layers which have
+been removed from the stack.
+
+## Fill\_raster\_gaps.R
+
+This script contains the R function `fill_gaps_gauss`, used for filling
+gaps in `06_SoilSuite.R`.
+
+## Focal\_density.R
+
+This script contains the R function `focal_density`, used for producing
+a multi-resolution density layer of the bare soil mask in
+`06_SoilSuite.R`.
+
+## f\_cropstack.R
+
+This script contains the R function `cropstack`, used for splitting the
+covariate layers into tiles in `03_Covariates_tiles_split.R`.
+
+## fuzzify\_indicators.R
+
+This script contains the R function `fuzzify_indicators` used for
+fuzzification in `04_Process_indicators.R`.
+
+## rename\_crisp.R
+
+R function which adds “crisp\_” at the start of a layer name and writes
+the layer to a new file. Used for renaming the crisp indicator layers in
+`04_Process_indicators.R`.
+
+## Folder “Old\_scripts”
+
+Previous versions of the code for processing the covariates. Copied from
+the repository “digijord\_code”.
+
+## Folder “flowpackage”
+
+Code for an Rcpp package to improve performance in
+`08_microtopography.R`.
+
+# Changelog
+
+## Version 20260318
+
+Additions: - Distance to churches built before 1800 AD (proxy for
+historic land use and management). - Microtopographic layers summarizing
+variation at 1.25 m resolution. - Historic land use probabilities in the
+18th century, based on the map created by the The Royal Danish Academy
+of Sciences and Letters. - Peat probability and relative sampling
+density based on the Ochre and Jupiter databases (They are mainly
+intended for mapping historic peat, but I have included them to
+facilitate their implementation.)
+
+Changes: - Updated and renamed ALOS/PALSAR layers, which now cover the
+years 2015 – 2023. - Renamed CHELSA layers for better sorting and
+interpretation. - Renamed the SoilSuite layers to increase
+readability. - Renamed indicator layers for better sorting and
+interpretation. - Further removal of NA values across all layers. -
+Included a proper changelog. - Updated overview table with more
+references and links to the (most) relevant R scripts for processing the
+data. - Fixed a typo in the mid slope position layer.
+
+Removals: - Cost\_dist (missing values in islands). - Sentinel-1 layers
+from 2020 (missing values). - Redundant layers for detrended dem and
+vdtchn. - GW layers from GEUS (missing values).
+
+## Version 20251219
+
+Additions: - L-band radar satellite images from ALOS/PALSAR. - A new
+bare soil composite from SoilSuite (20 m resolution), as well as the
+overall surface reflectance from Sentinel-2. The gaps in the bare soil
+composite have been filled in to avoid artifacts from NAs, but there are
+also layers which explicitly indicate the bare soil extent. - Fuzzy
+indicator layers for nature types from basemap.
+
+Removals: - Satellite products from DIGIJORD, due to ownership of the
+data. - Central wetlands: We are currently working on an updated map of
+historical peatlands, so this layer should no longer be used. -
+Indicator layers with crisp boundaries and crisp layers of cropping
+history (IMK). The new version only uses fuzzified indicator rasters, as
+they produce a more realistic prediction surface.
+
+Other changes: - I have expanded all the tiles with 16 pixels in each
+direction to create an overlap between them. This means we can now use
+the tiles for predictions with convolutional neural networks with kernel
+sizes up to 32x32. - The layer “wetlands\_10m\_fuzzy” has been renamed
+to “fuzzy\_adk\_wetlands” to indicate the data source (ADK:
+Arealdatakontoret – The Areal Data Office). - Repaired missing values in
+some of the fuzzy indicator rasters. - Old 30.4 m stack: Some of the
+layers in the old stack had mismatching extents. This has now been
+fixed.
+
+## Version 20240304
+
+Additions: - A larger set (64 layers) with oblique geographic
+coordinates. - Fuzzy boundaries for the categorical indicator rasters
+(“fuzzy\_…”). In many cases these layers can help to create softer, more
+realistic changes from one class to another. I have based the width of
+the fuzzy boundaries on the approximate spatial uncertainty of the
+original maps. The original layers with crisp boundaries are still in
+the stack if you prefer those. - Bare soil composite with filled gaps
+(“filled\_…”). In these layers I have first removed edge pixels and
+pixels with less than 10 bare soil images. I have then filled the gaps
+by interpolation, using an iterative procedure based on aggregation and
+smoothing. The values in the gaps do not necessarily represent the
+expected soil reflectance, but they often alleviate the problem of sharp
+boundaries at the edge of the bare soil extent. - The layer
+“s2\_count\_max10.tif”, indicating the number of bare soil images for
+each pixel, with a maximum value of 10. In some cases, the extent of the
+bare soil area can be a useful covariate in itself. The layer
+“s2\_count\_max10\_fuzzy.tif” is a smoothed version, which I use myself.
+
+Changes: - Produced a set of 591 tiles to facilitate parallel
+processing.
+
+## Version 20230323
+
+Additions: - CHELSA bioclimatic variables from Sebastian. - Cost
+distances and detrended DEM from Gasper. - Hillyness layer from Mette.
+
+Changes: - Changed the layer names stored in the files, so they all
+match the file name. This way, covariates will have the correct names
+when loaded with terra in R. - Included two columns in the overview
+table, containing a text description of each covariate as well as the
+units. This work is not complete, but you can help to fill out some of
+the missing values if you like.
+
+## Version 20230124
+
+Changes: - Replaced all dots (.) in the names with underscores. The
+names now exclusively separate words using underscores. - For
+standardization, all names are now in lowercase only. - Masked all
+covariates to the coastline of the DEM, so no covariates have values
+outside of this mask. - Updated the overview csv with more information.
+The csv now also lists inclusion/exclusion from the stack for each
+covariate.
+
+## Version 20220920
+
+Features: - First version of the new 10 m covariate stack. - Overview
+table included as csv, listing names, coverage, SCORPAN factors and a
+few additional notes. We still don’t have full documentation on all the
+layers, but it’s a functioning stack, which you can load into R. - I
+have cropped all the layers to the same extent as the bare soil
+composite, so they might not match some of the other 10 layers that we
+have. - I have rounded most of the layers to four significant digits to
+reduce the file size. This is not a perfect solution, but it works.
