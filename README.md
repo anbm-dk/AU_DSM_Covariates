@@ -13,7 +13,8 @@ specific data sources. A few scripts contain R functions used in the
 other scripts.
 
 The main page (which you are currently reading) contains a brief
-overview of the purposes and methods of each script
+overview of the purposes and methods of each script as well as the
+changelog for the covariate stack.
 
 # Structure
 
@@ -189,45 +190,38 @@ Additions:
 Changes:
 
 -   Updated and renamed ALOS/PALSAR layers, which now cover the years
-    2015 – 2023.
+    2015 – 2023 (download by Sebastian).
 -   Renamed CHELSA layers for better sorting and interpretation.
 -   Renamed the SoilSuite layers to increase readability.
 -   Renamed indicator layers for better sorting and interpretation.
 -   Further removal of NA values across all layers.
--   Included a proper changelog.
+-   Included a proper change log.
 -   Updated overview table with more references and links to the (most)
     relevant R scripts for processing the data.
--   Fixed a typo in the mid slope position layer.
+-   Fixed a typo in the name for the mid slope position layer.
 
 Removals:
 
 -   Cost\_dist (missing values in islands).
 -   Sentinel-1 layers from 2020 (missing values).
 -   Redundant layers for detrended dem and vdtchn.
--   GW layers from GEUS (missing values).
+-   Groundwater depth layers from GEUS (missing values).
 
 ## Version 20251219
 
 Additions:
 
--   L-band radar satellite images from ALOS/PALSAR.
+-   L-band radar satellite images from ALOS/PALSAR (downloaded by
+    Sebastian).
 -   A new bare soil composite from SoilSuite (20 m resolution), as well
     as the overall surface reflectance from Sentinel-2. The gaps in the
     bare soil composite have been filled in to avoid artifacts from NAs,
     but there are also layers which explicitly indicate the bare soil
-    extent.
--   Fuzzy indicator layers for nature types from basemap.
+    extent (downloaded by Lucas).
+-   Fuzzy indicator layers for nature types from basemap (nature type
+    indicators from Sebastian).
 
-Removals:
-
--   Satellite products from DIGIJORD, due to ownership of the data.
--   Central wetlands: We are currently working on an updated map of
-    historical peatlands, so this layer should no longer be used.
--   Indicator layers with crisp boundaries and crisp layers of cropping
-    history (IMK). The new version only uses fuzzified indicator
-    rasters, as they produce a more realistic prediction surface.
-
-Other changes:
+Changes:
 
 -   I have expanded all the tiles with 16 pixels in each direction to
     create an overlap between them. This means we can now use the tiles
@@ -240,6 +234,15 @@ Other changes:
 -   Old 30.4 m stack: Some of the layers in the old stack had
     mismatching extents. This has now been fixed.
 
+Removals:
+
+-   Satellite products from DIGIJORD, due to ownership of the data.
+-   Central wetlands: We are currently working on an updated map of
+    historical peatlands, so this layer should no longer be used.
+-   Indicator layers with crisp boundaries and crisp layers of cropping
+    history (IMK). The new version only uses fuzzified indicator
+    rasters, as they produce a more realistic prediction surface.
+
 ## Version 20240304
 
 Additions:
@@ -250,7 +253,7 @@ Additions:
     changes from one class to another. I have based the width of the
     fuzzy boundaries on the approximate spatial uncertainty of the
     original maps. The original layers with crisp boundaries are still
-    in the stack if you prefer those.
+    in the stack.
 -   Bare soil composite with filled gaps (“filled\_…”). In these layers
     I have first removed edge pixels and pixels with less than 10 bare
     soil images. I have then filled the gaps by interpolation, using an
@@ -272,26 +275,24 @@ Changes:
 
 Additions:
 
--   CHELSA bioclimatic variables from Sebastian.
--   Cost distances and detrended DEM from Gasper.
--   Hillyness layer from Mette.
+-   CHELSA bioclimatic variables (from Sebastian).
+-   Cost distances and detrended DEM (from Gasper).
+-   Hillyness layer (from Mette).
 
 Changes:
 
 -   Changed the layer names stored in the files, so they all match the
     file name. This way, covariates will have the correct names when
-    loaded with terra in R.
+    loaded with `terra` in R.
 -   Included two columns in the overview table, containing a text
-    description of each covariate as well as the units. This work is not
-    complete, but you can help to fill out some of the missing values if
-    you like.
+    description of each covariate as well as the units.
 
 ## Version 20230124
 
 Changes:
 
--   Replaced all dots (.) in the names with underscores. The names now
-    exclusively separate words using underscores.
+-   Replaced all dots (.) in the names with underscores (\_). The names
+    now exclusively separate words using underscores.
 -   For standardization, all names are now in lowercase only.
 -   Masked all covariates to the coastline of the DEM, so no covariates
     have values outside of this mask.
